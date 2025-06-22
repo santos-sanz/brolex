@@ -46,11 +46,15 @@
   },
   {
     "id": 6,
-    "name": "Overexplorer",
-    "tagline": "Pre-scuffed for that \"been places\" vibe.",
-    "price": 10101,
-    "image": "/overexplorer.png",
-    "description": "Adventure-ready straight from the box.",
-    "features": ["Authentic wear patterns", "Story generator", "Instant credibility"]
+    "name": "Delaytona",
+    "tagline": "Always fashionably late to the finish line.",
+    "price": 12345,
+    "image": "/delaytona.png",
+    "description": "A racing chronograph that thinks pit stops are for power-naps. Perfect for drivers whose fastest lap is the one in their mind.",
+    "features": [
+      "Chrono-Lag™ timing (adds drama to every second)",
+      "Procrastination bezel (spins... eventually)",
+      "Lap memory—when it feels like it"
+    ]
   }
 ]
