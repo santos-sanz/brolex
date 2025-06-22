@@ -65,6 +65,8 @@ To set up the ElevenLabs AI concierge:
 4. Copy your Agent ID and API key
 5. Add them to your environment variables
 
+If the ElevenLabs domains are blocked in your environment, a local fallback script will be used instead. It simply shows a placeholder widget in place of the real voice agent.
+
 The AI agent will be embedded on the `/agent` page and can answer questions about the watches, provide recommendations, and maintain the satirical tone of the brand.
 
 ## 🎨 Design Philosophy

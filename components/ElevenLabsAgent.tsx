@@ -10,6 +10,7 @@ interface ElevenLabsAgentProps {
 const SCRIPT_SOURCES = [
   'https://agent.elevenlabs.io/agent.js',
   'https://elevenlabs-agent.vercel.app/agent.js', // Proxy fallback (example, you'd need to set this up)
+  '/elevenlabs-agent.js', // Local stub for restricted environments
 ];
 
 const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey }) => {
