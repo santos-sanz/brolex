@@ -1,15 +1,40 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { ArrowLeft, Crown } from 'lucide-react';
+import { ArrowLeft, Crown, Bot, Loader2 } from 'lucide-react';
 
 export default function Agent() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
+    // Check if environment variables are available
+    const agentId = process.env.NEXT_PUBLIC_AGENT_ID || 'agent_01jybb45c6fcwapkfyh35etnqa';
+    const apiKey = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY || 'sk_891e7ca9e5f9a7b1bc844c0ec12d0f7555739dae3ee91b9c';
+
+    if (!agentId || !apiKey) {
+      setError('Missing ElevenLabs configuration');
+      setIsLoading(false);
+      return;
+    }
+
     // Load ElevenLabs Agent script
     const script = document.createElement('script');
     script.src = 'https://agent.elevenlabs.io/agent.js';
-    script.setAttribute('data-agent-id', process.env.NEXT_PUBLIC_AGENT_ID || 'agent_01jybb45c6fcwapkfyh35etnqa');
-    script.setAttribute('data-api-key', process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY || 'sk_891e7ca9e5f9a7b1bc844c0ec12d0f7555739dae3ee91b9c');
+    script.setAttribute('data-agent-id', agentId);
+    script.setAttribute('data-api-key', apiKey);
+    
+    script.onload = () => {
+      console.log('ElevenLabs script loaded successfully');
+      setIsLoading(false);
+    };
+    
+    script.onerror = () => {
+      console.error('Failed to load ElevenLabs script');
+      setError('Failed to load AI agent');
+      setIsLoading(false);
+    };
+
     document.body.appendChild(script);
 
     return () => {
@@ -61,6 +86,28 @@ export default function Agent() {
 
             {/* ElevenLabs Agent Container */}
             <div className="bg-white rounded-2xl shadow-lg p-8 min-h-[500px]">
+              {isLoading && (
+                <div className="flex items-center justify-center h-[400px]">
+                  <div className="text-center">
+                    <Loader2 className="w-8 h-8 text-amber-600 animate-spin mx-auto mb-4" />
+                    <p className="text-slate-600">Loading AI Concierge...</p>
+                  </div>
+                </div>
+              )}
+              
+              {error && (
+                <div className="flex items-center justify-center h-[400px]">
+                  <div className="text-center">
+                    <Bot className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+                    <p className="text-slate-600 mb-2">Unable to load AI agent</p>
+                    <p className="text-sm text-slate-500">{error}</p>
+                    <p className="text-xs text-slate-400 mt-4">
+                      Please check your environment configuration
+                    </p>
+                  </div>
+                </div>
+              )}
+              
               <div id="elevenlabs-agent-widget" className="w-full h-full min-h-[400px]">
                 {/* ElevenLabs agent will be embedded here */}
               </div>
