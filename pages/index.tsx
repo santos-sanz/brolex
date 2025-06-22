@@ -74,7 +74,7 @@ export default function Home() {
             >
               <div className="flex items-center space-x-2 text-slate-300">
                 <Star className="w-5 h-5 text-amber-500" />
-                <span className="text-sm">"Premium" Craftsmanship*</span>
+                <span className="text-sm">&quot;Premium&quot; Craftsmanship*</span>
               </div>
               <div className="flex items-center space-x-2 text-slate-300">
                 <Shield className="w-5 h-5 text-amber-500" />
@@ -123,10 +123,10 @@ export default function Home() {
               className="text-center mb-16"
             >
               <h2 className="text-5xl font-bold mb-4 font-playfair text-slate-900">
-                Our "Luxury" Collection
+                Our &quot;Luxury&quot; Collection
               </h2>
               <p className="text-slate-600 mb-8 text-xl">
-                For those who value the appearance of punctuality more than actual timekeeping. Each piece is a conversation starter, especially when you're late.
+                For those who value the appearance of punctuality more than actual timekeeping. Each piece is a conversation starter, especially when you&apos;re late.
               </p>
               
               {/* Collection Stats */}
