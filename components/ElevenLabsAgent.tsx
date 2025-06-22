@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import Link from 'next/link';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 interface ElevenLabsAgentProps {
@@ -21,20 +22,20 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey }) =>
   const scriptAttempts = useRef<number>(0);
 
   useEffect(() => {
-    // Validate API key format
-    if (!apiKey) {
-      setError(isDevelopment 
-        ? 'ElevenLabs API key is not configured. Please add NEXT_PUBLIC_ELEVENLABS_API_KEY to your .env file.'
-        : 'Unable to load voice assistant. Please try again later.');
+    const loadStubAgent = () => {
+      if (isDevelopment) {
+        console.warn('[ElevenLabs Agent] Missing or invalid API key. Loading stub agent.');
+      }
+      const script = document.createElement('script');
+      script.src = '/elevenlabs-agent.js';
+      script.async = true;
+      document.head.appendChild(script);
       setIsLoading(false);
-      return;
-    }
+    };
 
-    if (!apiKey.startsWith('sk_')) {
-      setError(isDevelopment
-        ? 'Invalid ElevenLabs API key format. API key should start with "sk_".'
-        : 'Unable to load voice assistant. Please try again later.');
-      setIsLoading(false);
+    // Validate API key format
+    if (!apiKey || !apiKey.startsWith('sk_')) {
+      loadStubAgent();
       return;
     }
 
@@ -173,12 +174,12 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey }) =>
           <AlertCircle className="h-8 w-8 mb-4 text-destructive" />
           <p className="text-center mb-4">{error}</p>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <a 
+            <Link
               href="/"
               className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-center"
             >
               Return to Home
-            </a>
+            </Link>
             {isDevelopment && (
               <button 
                 onClick={() => {
