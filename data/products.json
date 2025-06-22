@@ -1,0 +1,56 @@
+[
+  {
+    "id": 1,
+    "name": "Subwrecker",
+    "tagline": "Water-resistant up to three lattes.",
+    "price": 9999,
+    "image": "/subwrecker.png",
+    "description": "The ultimate diving companion for coffee shop adventures.",
+    "features": ["Caffeine-proof coating", "Barista-approved design", "Latte-depth rating"]
+  },
+  {
+    "id": 2,
+    "name": "Datejust-ish",
+    "tagline": "Knows the date… give or take a day.",
+    "price": 8888,
+    "image": "/datejust-ish.png",
+    "description": "Perfect for those who live in the moment, or yesterday.",
+    "features": ["Approximate date display", "Timezone confusion", "Calendar-adjacent"]
+  },
+  {
+    "id": 3,
+    "name": "Yacht-Mess",
+    "tagline": "For captains of group chats.",
+    "price": 12345,
+    "image": "/yatchmess.png",
+    "description": "Navigate social waters with questionable authority.",
+    "features": ["Message notification", "Social compass", "Drama-resistant"]
+  },
+  {
+    "id": 4,
+    "name": "Dayfaker",
+    "tagline": "Pretends to know what day it is.",
+    "price": 11000,
+    "image": "/dayfaker.png",
+    "description": "For professionals who wing it with style.",
+    "features": ["Confidence display", "Fake-it-till-you-make-it mode", "Bluff detection"]
+  },
+  {
+    "id": 5,
+    "name": "Airbluff",
+    "tagline": "High-flying looks, grounded accuracy.",
+    "price": 7777,
+    "image": "/airbluff.png",
+    "description": "Soar through meetings with questionable precision.",
+    "features": ["Altitude estimation", "Turbulence indicator", "Landing gear optional"]
+  },
+  {
+    "id": 6,
+    "name": "Overexplorer",
+    "tagline": "Pre-scuffed for that \"been places\" vibe.",
+    "price": 10101,
+    "image": "/overexplorer.png",
+    "description": "Adventure-ready straight from the box.",
+    "features": ["Authentic wear patterns", "Story generator", "Instant credibility"]
+  }
+]

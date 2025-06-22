@@ -1,70 +1,15 @@
 'use client';
 
-import { useState } from 'react';
 import Head from 'next/head';
 import Layout from '../components/Layout';
 import WatchCard from '../components/WatchCard';
 import { Crown, ArrowRight, Star, Shield, Award, Sparkles } from 'lucide-react';
-import Link from 'next/link';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
+import { useState } from 'react';
 import type { Watch } from '../contexts/CartContext';
-
-const watches: Watch[] = [
-  {
-    id: 1,
-    name: 'Subwrecker',
-    tagline: 'Water-resistant up to three lattes.',
-    price: 9999,
-    image: '/ChatGPT Image Jun 20, 2025, 12_21_14 AM.png',
-    description: 'The ultimate diving companion for coffee shop adventures.',
-    features: ['Caffeine-proof coating', 'Barista-approved design', 'Latte-depth rating']
-  },
-  {
-    id: 2,
-    name: 'Datejust-ish',
-    tagline: 'Knows the date… give or take a day.',
-    price: 8888,
-    image: '/ChatGPT Image Jun 20, 2025, 12_20_56 AM.png',
-    description: 'Perfect for those who live in the moment, or yesterday.',
-    features: ['Approximate date display', 'Timezone confusion', 'Calendar-adjacent']
-  },
-  {
-    id: 3,
-    name: 'Yacht-Mess',
-    tagline: 'For captains of group chats.',
-    price: 12345,
-    image: 'https://images.pexels.com/photos/1034063/pexels-photo-1034063.jpeg?auto=compress&cs=tinysrgb&w=400',
-    description: 'Navigate social waters with questionable authority.',
-    features: ['Message notification', 'Social compass', 'Drama-resistant']
-  },
-  {
-    id: 4,
-    name: 'Dayfaker',
-    tagline: 'Pretends to know what day it is.',
-    price: 11000,
-    image: 'https://images.pexels.com/photos/1697209/pexels-photo-1697209.jpeg?auto=compress&cs=tinysrgb&w=400',
-    description: 'For professionals who wing it with style.',
-    features: ['Confidence display', 'Fake-it-till-you-make-it mode', 'Bluff detection']
-  },
-  {
-    id: 5,
-    name: 'Airbluff',
-    tagline: 'High-flying looks, grounded accuracy.',
-    price: 7777,
-    image: '/ChatGPT Image Jun 20, 2025, 12_21_01 AM.png',
-    description: 'Soar through meetings with questionable precision.',
-    features: ['Altitude estimation', 'Turbulence indicator', 'Landing gear optional']
-  },
-  {
-    id: 6,
-    name: 'Overexplorer',
-    tagline: 'Pre-scuffed for that "been places" vibe.',
-    price: 10101,
-    image: 'https://images.pexels.com/photos/1697212/pexels-photo-1697212.jpeg?auto=compress&cs=tinysrgb&w=400',
-    description: 'Adventure-ready straight from the box.',
-    features: ['Authentic wear patterns', 'Story generator', 'Instant credibility']
-  },
-];
+import productsJson from '../data/products.json';
+const watches: Watch[] = productsJson as Watch[];
 
 export default function Home() {
   return (
@@ -73,7 +18,7 @@ export default function Home() {
         <title>Brolex – Premium Watches That Almost Work</title>
         <meta 
           name="description" 
-          content="Luxury timepieces that redefine punctuality. Shop our collection of premium watches with an AI concierge experience." 
+          content="Because telling time is overrated, but looking expensive isn't. Our 'luxury' timepieces come with a built-in excuse for being fashionably late." 
         />
       </Head>
       <Layout>
@@ -97,9 +42,14 @@ export default function Home() {
                 <Crown className="w-16 h-16 text-amber-500 mr-4 transform -rotate-12" />
                 <div className="absolute inset-0 bg-amber-500 opacity-30 blur-xl rounded-full"></div>
               </div>
-              <h1 className="text-6xl sm:text-7xl lg:text-8xl font-bold text-white font-playfair">
-                Brolex
-              </h1>
+              <div className="text-left">
+                <h1 className="text-6xl sm:text-7xl lg:text-8xl font-bold text-white font-playfair">
+                  Brolex
+                </h1>
+                <p className="text-amber-500 text-sm mt-2">
+                  *Not affiliated with any actual luxury brands. Or punctuality.
+                </p>
+              </div>
             </motion.div>
             
             <motion.div
@@ -108,10 +58,10 @@ export default function Home() {
               transition={{ duration: 0.8, delay: 0.2 }}
             >
               <p className="text-3xl sm:text-4xl text-amber-400 mb-4 font-playfair italic">
-                Luxury that almost ticks.
+                The watch that tells time... sometimes.
               </p>
               <p className="text-slate-400 mb-12 text-lg">
-                Warning: punctuality not guaranteed, but style is eternal.
+                Warning: May cause excessive watch checking. Time displayed is an artistic interpretation.
               </p>
             </motion.div>
             
@@ -124,7 +74,7 @@ export default function Home() {
             >
               <div className="flex items-center space-x-2 text-slate-300">
                 <Star className="w-5 h-5 text-amber-500" />
-                <span className="text-sm">Premium Craftsmanship*</span>
+                <span className="text-sm">"Premium" Craftsmanship*</span>
               </div>
               <div className="flex items-center space-x-2 text-slate-300">
                 <Shield className="w-5 h-5 text-amber-500" />
@@ -132,7 +82,7 @@ export default function Home() {
               </div>
               <div className="flex items-center space-x-2 text-slate-300">
                 <Award className="w-5 h-5 text-amber-500" />
-                <span className="text-sm">Award-Winning Design***</span>
+                <span className="text-sm">Self-Awarded Design***</span>
               </div>
             </motion.div>
             
@@ -144,7 +94,7 @@ export default function Home() {
               <Link href="/agent">
                 <button className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-white font-semibold rounded-full shadow-2xl hover:shadow-amber-500/25 transform hover:scale-105 transition-all duration-300 text-lg border border-amber-400">
                   <Sparkles className="mr-3 w-5 h-5" />
-                  Chat with Our AI Concierge
+                  Get Robo-Excuses for Being Late
                   <ArrowRight className="ml-3 w-5 h-5" />
                 </button>
               </Link>
@@ -173,25 +123,25 @@ export default function Home() {
               className="text-center mb-16"
             >
               <h2 className="text-5xl font-bold mb-4 font-playfair text-slate-900">
-                Our Distinguished Collection
+                Our "Luxury" Collection
               </h2>
-              <p className="text-slate-600 mb-8 text-xl max-w-3xl mx-auto">
-                Timepieces that redefine the concept of time itself, crafted with questionable precision and undeniable style.
+              <p className="text-slate-600 mb-8 text-xl">
+                For those who value the appearance of punctuality more than actual timekeeping. Each piece is a conversation starter, especially when you're late.
               </p>
               
               {/* Collection Stats */}
               <div className="flex justify-center space-x-12 text-center">
                 <div>
                   <div className="text-3xl font-bold text-amber-600 font-playfair">6</div>
-                  <div className="text-sm text-slate-500">Luxury Models</div>
+                  <div className="text-sm text-slate-500">Overpriced Timepieces</div>
                 </div>
                 <div>
                   <div className="text-3xl font-bold text-amber-600 font-playfair">∞</div>
-                  <div className="text-sm text-slate-500">Style Points</div>
+                  <div className="text-sm text-slate-500">Excuses to Be Late</div>
                 </div>
                 <div>
                   <div className="text-3xl font-bold text-amber-600 font-playfair">?</div>
-                  <div className="text-sm text-slate-500">Accuracy Rating</div>
+                  <div className="text-sm text-slate-500">Chance of Working</div>
                 </div>
               </div>
             </motion.div>
@@ -253,7 +203,7 @@ export default function Home() {
             
             <div className="border-t border-slate-700 pt-8 text-center">
               <p className="text-slate-400 mb-2">
-                © 2025 Brolex — All rights reversed, some wrongs corrected.
+                2025 Brolex — All rights reversed, some wrongs corrected.
               </p>
               <p className="text-xs text-slate-500">
                 Batteries not included, actual time may vary, side effects may include sudden urges to check your phone.
