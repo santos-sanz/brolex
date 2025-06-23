@@ -1,204 +1,313 @@
+'use client';
+
 import { useEffect, useState, useRef } from 'react';
-import Link from 'next/link';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Mic, MicOff, Volume2, VolumeX, Loader2, AlertCircle, Crown, Sparkles } from 'lucide-react';
 
 interface ElevenLabsAgentProps {
   agentId: string;
   apiKey: string;
 }
 
-// Define script sources to try, in order of preference
-const SCRIPT_SOURCES = [
-  'https://agent.elevenlabs.io/agent.js',
-  'https://elevenlabs-agent.vercel.app/agent.js', // Proxy fallback (example, you'd need to set this up)
-  '/elevenlabs-agent.js', // Local stub for restricted environments
-];
+declare global {
+  interface Window {
+    ElevenLabs?: {
+      Agent: {
+        startSession: (config: any) => Promise<any>;
+        endSession: () => void;
+      };
+    };
+  }
+}
 
 const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [conversationStarted, setConversationStarted] = useState(false);
+  const agentRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const isDevelopment = process.env.NODE_ENV === 'development';
-  const scriptAttempts = useRef<number>(0);
 
   useEffect(() => {
-    const loadStubAgent = () => {
-      if (isDevelopment) {
-        console.warn('[ElevenLabs Agent] Missing or invalid API key. Loading stub agent.');
-      }
-      const script = document.createElement('script');
-      script.src = '/elevenlabs-agent.js';
-      script.async = true;
-      document.head.appendChild(script);
-      setIsLoading(false);
-    };
-
-    // Validate API key format
     if (!apiKey || !apiKey.startsWith('sk_')) {
-      loadStubAgent();
+      setError('Please configure your ElevenLabs API key in the environment variables.');
+      setIsLoading(false);
       return;
     }
 
-    // Create a container for the agent
-    const agentContainer = document.createElement('div');
-    agentContainer.id = 'elevenlabs-agent-container';
-    agentContainer.style.width = '100%';
-    agentContainer.style.height = '100%';
-    agentContainer.style.minHeight = '400px';
-
-    // Clear any previous content and append the container
-    if (containerRef.current) {
-      containerRef.current.innerHTML = '';
-      containerRef.current.appendChild(agentContainer);
-    }
-
-    // Initialize ElevenLabs Agent
-    try {
-      // Create a function to attempt loading the script from different sources
-      const attemptScriptLoad = (sourceIndex: number = 0) => {
-        if (sourceIndex >= SCRIPT_SOURCES.length) {
-          if (isDevelopment) {
-            console.error('[ElevenLabs Agent] All script sources failed to load');
-          }
-          setError(isDevelopment
-            ? 'Failed to load ElevenLabs agent script from all available sources. Check network connection and agent configuration.'
-            : 'Unable to load voice assistant. Please try again later.');
-          setIsLoading(false);
+    const loadElevenLabsScript = () => {
+      return new Promise<void>((resolve, reject) => {
+        // Check if script is already loaded
+        if (window.ElevenLabs) {
+          resolve();
           return;
         }
 
-        scriptAttempts.current = sourceIndex;
         const script = document.createElement('script');
-        script.src = SCRIPT_SOURCES[sourceIndex];
+        script.src = 'https://elevenlabs.io/convai-widget/index.js';
         script.async = true;
-        script.setAttribute('data-agent-id', agentId);
-        script.setAttribute('data-api-key', apiKey);
         
-        // For localhost development, add origin hint to help with allow list
-        if (isDevelopment) {
-          script.setAttribute('data-origin-hint', window.location.origin);
-        }
-
-      // Handle script loading timeout
-      const timeout = setTimeout(() => {
-        if (isDevelopment) {
-          console.error('[ElevenLabs Agent] Script loading timed out after 10 seconds');
-        }
-        setError(isDevelopment
-          ? 'Script loading timed out. Please check your internet connection and try again.'
-          : 'Unable to load voice assistant. Please try again later.');
-        setIsLoading(false);
-      }, 10000);
-
-      script.onload = () => {
-        clearTimeout(timeout);
-        if (isDevelopment) {
-          console.log('[ElevenLabs Agent] Script loaded successfully');
-        }
-
-        // Verify agent is properly initialized
-        setTimeout(() => {
-          const agentWidget = document.getElementById('elevenlabs-agent-widget');
-          if (!agentWidget || agentWidget.children.length === 0) {
-            if (isDevelopment) {
-              console.error('[ElevenLabs Agent] Failed to initialize agent widget');
+        script.onload = () => {
+          // Wait a bit for the library to initialize
+          setTimeout(() => {
+            if (window.ElevenLabs) {
+              resolve();
+            } else {
+              reject(new Error('ElevenLabs library not available after script load'));
             }
-            setError(isDevelopment
-              ? 'ElevenLabs agent failed to initialize. Please verify your Agent ID and API key are correct.'
-              : 'Unable to load voice assistant. Please try again later.');
-          }
-          setIsLoading(false);
-        }, 2000);
-      };
-
-      script.onerror = (event) => {
-        clearTimeout(timeout);
+          }, 1000);
+        };
         
-        if (isDevelopment) {
-          console.group('%c[ElevenLabs Agent] Script Loading Failed', 'color: #ff4d4f; font-weight: bold;');
-          console.error('Event:', event);
-          console.error('Agent ID:', agentId);
-          console.error('API Key configured:', !!apiKey);
-          console.error('Script Source:', script.src);
-          console.error('Attempt:', scriptAttempts.current + 1, 'of', SCRIPT_SOURCES.length);
-          console.groupEnd();
-        }
-        
-        // Try the next source
-        attemptScriptLoad(scriptAttempts.current + 1);
-      };
+        script.onerror = () => {
+          reject(new Error('Failed to load ElevenLabs script'));
+        };
 
-      document.head.appendChild(script);
-      };
-      
-      // Start the loading process with the first source
-      attemptScriptLoad();
-    } catch (err) {
-      if (isDevelopment) {
-        console.error('[ElevenLabs Agent] Initialization error:', err);
-      }
-      setError(isDevelopment
-        ? `Error initializing ElevenLabs agent: ${err instanceof Error ? err.message : 'Unknown error'}`
-        : 'Unable to load voice assistant. Please try again later.');
-      setIsLoading(false);
-    }
-
-    // Cleanup when component unmounts
-    return () => {
-      // Remove any ElevenLabs script tags from any source
-      SCRIPT_SOURCES.forEach(src => {
-        const existingScript = document.querySelector(`script[src="${src}"]`);
-        if (existingScript) {
-          existingScript.remove();
-        }
+        document.head.appendChild(script);
       });
-      
-      const agentWidget = document.getElementById('elevenlabs-agent-widget');
-      if (agentWidget) {
-        agentWidget.remove();
+    };
+
+    const initializeAgent = async () => {
+      try {
+        await loadElevenLabsScript();
+        
+        if (!window.ElevenLabs) {
+          throw new Error('ElevenLabs library not available');
+        }
+
+        // Initialize the agent
+        const agent = await window.ElevenLabs.Agent.startSession({
+          agentId: agentId,
+          apiKey: apiKey,
+          onConnect: () => {
+            console.log('Connected to ElevenLabs agent');
+            setIsConnected(true);
+            setIsLoading(false);
+          },
+          onDisconnect: () => {
+            console.log('Disconnected from ElevenLabs agent');
+            setIsConnected(false);
+          },
+          onError: (error: any) => {
+            console.error('ElevenLabs agent error:', error);
+            setError('Failed to connect to the AI agent. Please try again.');
+            setIsLoading(false);
+          },
+          onMessage: (message: any) => {
+            console.log('Agent message:', message);
+          },
+          onModeChange: (mode: any) => {
+            setIsListening(mode.mode === 'listening');
+          }
+        });
+
+        agentRef.current = agent;
+        
+      } catch (err) {
+        console.error('Failed to initialize ElevenLabs agent:', err);
+        setError('Unable to load the AI agent. Please check your configuration and try again.');
+        setIsLoading(false);
       }
     };
-  }, [agentId, apiKey, isDevelopment]);
+
+    initializeAgent();
+
+    return () => {
+      if (agentRef.current) {
+        try {
+          window.ElevenLabs?.Agent.endSession();
+        } catch (err) {
+          console.error('Error ending session:', err);
+        }
+      }
+    };
+  }, [agentId, apiKey]);
+
+  const startConversation = () => {
+    if (agentRef.current && isConnected) {
+      setConversationStarted(true);
+      // The agent should automatically start listening
+    }
+  };
+
+  const toggleMute = () => {
+    if (agentRef.current) {
+      setIsMuted(!isMuted);
+      // Implement mute functionality if available in the API
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full min-h-[500px] bg-gradient-to-br from-slate-50 to-white rounded-2xl border border-slate-200">
+        <div className="relative mb-6">
+          <Crown className="w-12 h-12 text-amber-500 animate-pulse" />
+          <div className="absolute inset-0 bg-amber-500 opacity-20 blur-xl rounded-full animate-pulse"></div>
+        </div>
+        <Loader2 className="w-8 h-8 text-amber-600 animate-spin mb-4" />
+        <p className="text-slate-600 font-medium">Connecting to your luxury AI concierge...</p>
+        <p className="text-sm text-slate-500 mt-2">Preparing the finest artificial intelligence</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full min-h-[500px] bg-gradient-to-br from-red-50 to-white rounded-2xl border border-red-200">
+        <AlertCircle className="w-16 h-16 text-red-400 mb-4" />
+        <h3 className="text-lg font-semibold text-slate-900 mb-2">Connection Failed</h3>
+        <p className="text-slate-600 text-center max-w-md mb-6">{error}</p>
+        
+        <div className="bg-slate-50 rounded-lg p-4 mb-6 max-w-md">
+          <h4 className="font-medium text-slate-900 mb-2">Setup Instructions:</h4>
+          <ol className="text-sm text-slate-600 space-y-1 list-decimal list-inside">
+            <li>Get your API key from <a href="https://elevenlabs.io" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:underline">ElevenLabs</a></li>
+            <li>Add it to your .env.local file</li>
+            <li>Restart the development server</li>
+          </ol>
+        </div>
+        
+        <button
+          onClick={() => window.location.reload()}
+          className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-2 rounded-lg transition-colors"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="relative min-h-[400px] w-full">
-      {isLoading && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/5 backdrop-blur-sm">
-          <Loader2 className="h-8 w-8 animate-spin mb-4 text-primary" />
-          <p>Loading voice assistant...</p>
-        </div>
-      )}
-      
-      {error && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/5 backdrop-blur-sm p-6">
-          <AlertCircle className="h-8 w-8 mb-4 text-destructive" />
-          <p className="text-center mb-4">{error}</p>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Link
-              href="/"
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-center"
-            >
-              Return to Home
-            </Link>
-            {isDevelopment && (
-              <button 
-                onClick={() => {
-                  setError(null);
-                  setIsLoading(true);
-                  // Reset and try loading again
-                  scriptAttempts.current = 0;
-                  setTimeout(() => window.location.reload(), 500);
-                }}
-                className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition-colors"
-              >
-                Try Again
-              </button>
-            )}
+    <div className="h-full min-h-[500px] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl border border-slate-700 overflow-hidden">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 p-6 text-white">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="relative">
+              <Crown className="w-6 h-6" />
+              <Sparkles className="w-3 h-3 absolute -top-1 -right-1 text-yellow-300" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold font-playfair">Brolex AI Concierge</h3>
+              <p className="text-amber-100 text-sm">
+                {isConnected ? 'Ready to assist' : 'Connecting...'}
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'} animate-pulse`}></div>
+            <span className="text-sm">{isConnected ? 'Online' : 'Offline'}</span>
           </div>
         </div>
-      )}
-      
-      <div ref={containerRef} className="w-full h-full min-h-[400px]" />
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 p-8 flex flex-col items-center justify-center text-center">
+        {!conversationStarted ? (
+          <div className="space-y-6">
+            <div className="relative">
+              <div className="w-24 h-24 bg-gradient-to-br from-amber-500 to-amber-600 rounded-full flex items-center justify-center mb-6 mx-auto shadow-2xl">
+                <Mic className="w-12 h-12 text-white" />
+              </div>
+              <div className="absolute inset-0 bg-amber-500 opacity-30 blur-2xl rounded-full animate-pulse"></div>
+            </div>
+            
+            <div className="space-y-4">
+              <h4 className="text-2xl font-bold text-white font-playfair">
+                Welcome to Brolex Concierge
+              </h4>
+              <p className="text-slate-300 max-w-md mx-auto">
+                Your personal luxury timepiece consultant is ready to help you find the perfect watch that almost tells time.
+              </p>
+              
+              <div className="bg-slate-800 rounded-lg p-4 max-w-md mx-auto">
+                <h5 className="text-amber-400 font-semibold mb-2">Ask me about:</h5>
+                <ul className="text-sm text-slate-300 space-y-1 text-left">
+                  <li>• Watch recommendations for your lifestyle</li>
+                  <li>• Luxury timepiece "features"</li>
+                  <li>• Creative excuses for being late</li>
+                  <li>• Our questionable warranty policies</li>
+                </ul>
+              </div>
+            </div>
+            
+            <button
+              onClick={startConversation}
+              disabled={!isConnected}
+              className="bg-gradient-to-r from-amber-600 to-amber-500 text-white font-semibold py-4 px-8 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+            >
+              <Mic className="w-5 h-5" />
+              <span>Start Voice Conversation</span>
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-6 w-full max-w-md">
+            <div className="relative">
+              <div className={`w-32 h-32 rounded-full flex items-center justify-center mx-auto shadow-2xl transition-all duration-300 ${
+                isListening 
+                  ? 'bg-gradient-to-br from-green-500 to-green-600 animate-pulse' 
+                  : 'bg-gradient-to-br from-amber-500 to-amber-600'
+              }`}>
+                {isListening ? (
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-8 bg-white rounded-full animate-pulse"></div>
+                    <div className="w-2 h-6 bg-white rounded-full animate-pulse delay-75"></div>
+                    <div className="w-2 h-10 bg-white rounded-full animate-pulse delay-150"></div>
+                    <div className="w-2 h-6 bg-white rounded-full animate-pulse delay-75"></div>
+                    <div className="w-2 h-8 bg-white rounded-full animate-pulse"></div>
+                  </div>
+                ) : (
+                  <Volume2 className="w-16 h-16 text-white" />
+                )}
+              </div>
+              <div className="absolute inset-0 bg-amber-500 opacity-30 blur-2xl rounded-full"></div>
+            </div>
+            
+            <div className="space-y-2">
+              <h4 className="text-xl font-bold text-white font-playfair">
+                {isListening ? 'Listening...' : 'AI Concierge Active'}
+              </h4>
+              <p className="text-slate-300 text-sm">
+                {isListening 
+                  ? 'Speak naturally about your luxury timepiece needs'
+                  : 'The AI is processing your request'
+                }
+              </p>
+            </div>
+            
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={toggleMute}
+                className={`p-3 rounded-full transition-colors ${
+                  isMuted 
+                    ? 'bg-red-600 hover:bg-red-700' 
+                    : 'bg-slate-700 hover:bg-slate-600'
+                }`}
+              >
+                {isMuted ? <VolumeX className="w-5 h-5 text-white" /> : <Volume2 className="w-5 h-5 text-white" />}
+              </button>
+              
+              <button
+                onClick={() => setConversationStarted(false)}
+                className="p-3 bg-slate-700 hover:bg-slate-600 rounded-full transition-colors"
+              >
+                <MicOff className="w-5 h-5 text-white" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="border-t border-slate-700 bg-slate-800 p-4 text-center">
+        <p className="text-xs text-slate-400">
+          Powered by ElevenLabs • Luxury advice not guaranteed to be accurate
+        </p>
+      </div>
+
+      {/* Hidden container for ElevenLabs widget */}
+      <div ref={containerRef} className="hidden" />
     </div>
   );
 };
