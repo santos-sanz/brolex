@@ -69,7 +69,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
             } else {
               reject(new Error('ElevenLabs library not available after script load'));
             }
-          }, 1000);
+          }, 3000);
         };
         
         script.onerror = () => {
