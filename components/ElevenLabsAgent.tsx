@@ -2,7 +2,7 @@
 
 import { useConversation } from '@elevenlabs/react';
 import { useCallback, useState, useEffect } from 'react';
-import { Mic, MicOff, Loader2, AlertCircle, Crown, Sparkles, Key, Eye, EyeOff, Play, Square } from 'lucide-react';
+import { Mic, MicOff, Loader2, AlertCircle, Crown, Sparkles, Key, Eye, EyeOff, Play, Square, RefreshCw } from 'lucide-react';
 
 interface ElevenLabsAgentProps {
   agentId: string;
@@ -16,11 +16,13 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
   const [currentApiKey, setCurrentApiKey] = useState(envApiKey);
   const [error, setError] = useState<string | null>(null);
   const [conversationStarted, setConversationStarted] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   const conversation = useConversation({
     onConnect: () => {
       console.log('Connected to ElevenLabs agent');
       setError(null);
+      setIsRetrying(false);
     },
     onDisconnect: () => {
       console.log('Disconnected from ElevenLabs agent');
@@ -31,7 +33,23 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
     },
     onError: (error) => {
       console.error('ElevenLabs agent error:', error);
-      setError('Failed to connect to the AI agent. Please check your API key and try again.');
+      setIsRetrying(false);
+      
+      // Handle specific error codes
+      if (error && typeof error === 'object' && 'code' in error) {
+        switch (error.code) {
+          case 3000:
+            setError('Authorization failed. Please check that your API key is valid and active. You may need to generate a new API key from your ElevenLabs dashboard.');
+            break;
+          case 1006:
+            setError('Connection failed. Please check your internet connection and try again.');
+            break;
+          default:
+            setError(`Connection error (Code: ${error.code}). Please verify your API key and agent ID are correct.`);
+        }
+      } else {
+        setError('Failed to connect to the AI agent. Please check your API key and try again.');
+      }
     },
   });
 
@@ -64,6 +82,8 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
 
     try {
       setError(null);
+      setIsRetrying(false);
+      
       // Request microphone permission
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
@@ -76,7 +96,14 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
       setConversationStarted(true);
     } catch (error) {
       console.error('Failed to start conversation:', error);
-      setError('Failed to start conversation. Please check your microphone permissions and API key.');
+      setIsRetrying(false);
+      
+      if (error && typeof error === 'object' && 'message' in error && 
+          typeof error.message === 'string' && error.message.includes('microphone')) {
+        setError('Microphone access denied. Please allow microphone permissions and try again.');
+      } else {
+        setError('Failed to start conversation. Please verify your API key is valid and active in your ElevenLabs dashboard.');
+      }
     }
   }, [conversation, agentId, currentApiKey]);
 
@@ -91,9 +118,16 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
     setShowApiKeyInput(true);
     setConversationStarted(false);
     setError(null);
+    setIsRetrying(false);
     if (conversation.status === 'connected') {
       conversation.endSession();
     }
+  };
+
+  const retryConnection = async () => {
+    setIsRetrying(true);
+    setError(null);
+    await startConversation();
   };
 
   // API Key Input Screen
@@ -210,22 +244,52 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
           </div>
           <div>
             <h3 className="text-xl font-semibold text-slate-900 mb-2">Connection Failed</h3>
-            <p className="text-slate-600">{error}</p>
+            <p className="text-slate-600 text-sm leading-relaxed">{error}</p>
           </div>
           
-          <div className="flex space-x-3">
+          <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+            <h4 className="text-amber-800 font-semibold text-sm mb-2">💡 Troubleshooting Tips</h4>
+            <ul className="text-xs text-amber-700 space-y-1 text-left">
+              <li>• Ensure your API key is active and not expired</li>
+              <li>• Verify you have sufficient credits in your ElevenLabs account</li>
+              <li>• Check that the Agent ID is correct</li>
+              <li>• Try generating a new API key from your dashboard</li>
+            </ul>
+          </div>
+          
+          <div className="flex flex-col space-y-3">
             <button
-              onClick={resetApiKey}
-              className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-xl transition-colors font-medium"
+              onClick={retryConnection}
+              disabled={isRetrying}
+              className="bg-amber-600 hover:bg-amber-700 disabled:bg-amber-400 text-white px-6 py-3 rounded-xl transition-colors font-medium flex items-center justify-center space-x-2"
             >
-              Try Different API Key
+              {isRetrying ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Retrying...</span>
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4" />
+                  <span>Retry Connection</span>
+                </>
+              )}
             </button>
-            <button
-              onClick={() => window.location.reload()}
-              className="bg-slate-600 hover:bg-slate-700 text-white px-6 py-3 rounded-xl transition-colors font-medium"
-            >
-              Reload Page
-            </button>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={resetApiKey}
+                className="bg-slate-600 hover:bg-slate-700 text-white px-4 py-2 rounded-lg transition-colors font-medium text-sm"
+              >
+                Change API Key
+              </button>
+              <button
+                onClick={() => window.location.reload()}
+                className="bg-slate-600 hover:bg-slate-700 text-white px-4 py-2 rounded-lg transition-colors font-medium text-sm"
+              >
+                Reload Page
+              </button>
+            </div>
           </div>
         </div>
       </div>
