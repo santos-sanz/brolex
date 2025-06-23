@@ -101,7 +101,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
     return (
       <div className="h-full min-h-[600px] bg-gradient-to-br from-slate-50 to-white rounded-2xl border border-slate-200 overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 via-blue-500 to-purple-600 p-8 text-white">
+        <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 p-8 text-white">
           <div className="flex items-center space-x-4">
             <div className="relative">
               <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
@@ -111,7 +111,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
             </div>
             <div>
               <h3 className="text-2xl font-bold">Connect Your API Key</h3>
-              <p className="text-blue-100 text-sm">Enter your ElevenLabs API key to start chatting</p>
+              <p className="text-amber-100 text-sm">Enter your ElevenLabs API key to start chatting</p>
             </div>
           </div>
         </div>
@@ -121,10 +121,10 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
           <div className="w-full max-w-md space-y-8">
             <div className="text-center space-y-4">
               <div className="relative">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto shadow-xl">
+                <div className="w-20 h-20 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl flex items-center justify-center mx-auto shadow-xl">
                   <Key className="w-10 h-10 text-white" />
                 </div>
-                <div className="absolute inset-0 bg-blue-500 opacity-20 blur-2xl rounded-full"></div>
+                <div className="absolute inset-0 bg-amber-500 opacity-20 blur-2xl rounded-full"></div>
               </div>
               
               <div>
@@ -146,7 +146,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
                     value={inputApiKey}
                     onChange={(e) => setInputApiKey(e.target.value)}
                     placeholder="sk_..."
-                    className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12 transition-all"
+                    className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent pr-12 transition-all"
                     required
                   />
                   <button
@@ -171,7 +171,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
               <button
                 type="submit"
                 disabled={!inputApiKey.trim() || !inputApiKey.startsWith('sk_')}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
+                className="w-full bg-gradient-to-r from-amber-600 to-amber-500 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
               >
                 <Play className="w-5 h-5" />
                 <span>Start Conversation</span>
@@ -179,18 +179,18 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
             </form>
 
             <div className="bg-slate-50 rounded-xl p-6 space-y-4">
-              <h5 className="text-blue-600 font-semibold text-sm flex items-center space-x-2">
+              <h5 className="text-amber-600 font-semibold text-sm flex items-center space-x-2">
                 <Sparkles className="w-4 h-4" />
                 <span>How to get your API key</span>
               </h5>
               <ol className="text-xs text-slate-600 space-y-2 list-decimal list-inside">
-                <li>Visit <a href="https://elevenlabs.io" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline font-medium">elevenlabs.io</a> and create an account</li>
+                <li>Visit <a href="https://elevenlabs.io" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:underline font-medium">elevenlabs.io</a> and create an account</li>
                 <li>Navigate to your profile settings</li>
                 <li>Find and copy your API key (starts with "sk_")</li>
                 <li>Paste it above to start chatting</li>
               </ol>
-              <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-                <p className="text-xs text-blue-700">
+              <div className="bg-amber-50 rounded-lg p-3 border border-amber-200">
+                <p className="text-xs text-amber-700">
                   🔒 Your API key is only used for this session and is never stored.
                 </p>
               </div>
@@ -216,7 +216,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
           <div className="flex space-x-3">
             <button
               onClick={resetApiKey}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl transition-colors font-medium"
+              className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-xl transition-colors font-medium"
             >
               Try Different API Key
             </button>
@@ -235,7 +235,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
   return (
     <div className="h-full min-h-[600px] bg-gradient-to-br from-slate-50 to-white rounded-2xl border border-slate-200 overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 via-blue-500 to-purple-600 p-6 text-white">
+      <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 p-6 text-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="relative">
@@ -246,7 +246,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
             </div>
             <div>
               <h3 className="text-xl font-bold">Brolex AI Concierge</h3>
-              <p className="text-blue-100 text-sm">
+              <p className="text-amber-100 text-sm">
                 {conversation.status === 'connected' ? 'Connected and ready' : 
                  conversation.status === 'connecting' ? 'Connecting...' : 'Ready to connect'}
               </p>
@@ -278,12 +278,12 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
         {conversation.status === 'connecting' && (
           <div className="space-y-6">
             <div className="relative">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto shadow-xl">
+              <div className="w-20 h-20 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl flex items-center justify-center mx-auto shadow-xl">
                 <Crown className="w-10 h-10 text-white animate-pulse" />
               </div>
-              <div className="absolute inset-0 bg-blue-500 opacity-20 blur-2xl rounded-full animate-pulse"></div>
+              <div className="absolute inset-0 bg-amber-500 opacity-20 blur-2xl rounded-full animate-pulse"></div>
             </div>
-            <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto" />
+            <Loader2 className="w-8 h-8 text-amber-600 animate-spin mx-auto" />
             <p className="text-slate-700 font-medium">Connecting to your luxury AI concierge...</p>
           </div>
         )}
@@ -291,10 +291,10 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
         {conversation.status === 'disconnected' && !conversationStarted && (
           <div className="space-y-8 max-w-lg">
             <div className="relative">
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 mx-auto shadow-2xl">
+              <div className="w-24 h-24 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl flex items-center justify-center mb-6 mx-auto shadow-2xl">
                 <Mic className="w-12 h-12 text-white" />
               </div>
-              <div className="absolute inset-0 bg-blue-500 opacity-20 blur-2xl rounded-full"></div>
+              <div className="absolute inset-0 bg-amber-500 opacity-20 blur-2xl rounded-full"></div>
             </div>
             
             <div className="space-y-4">
@@ -306,25 +306,25 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
               </p>
               
               <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
-                <h5 className="text-blue-600 font-semibold mb-3 flex items-center space-x-2">
+                <h5 className="text-amber-600 font-semibold mb-3 flex items-center space-x-2">
                   <Sparkles className="w-4 h-4" />
                   <span>Ask me about</span>
                 </h5>
                 <ul className="text-sm text-slate-600 space-y-2 text-left">
                   <li className="flex items-center space-x-2">
-                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                    <div className="w-1.5 h-1.5 bg-amber-500 rounded-full"></div>
                     <span>Watch recommendations for your lifestyle</span>
                   </li>
                   <li className="flex items-center space-x-2">
-                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                    <div className="w-1.5 h-1.5 bg-amber-500 rounded-full"></div>
                     <span>Luxury timepiece "features"</span>
                   </li>
                   <li className="flex items-center space-x-2">
-                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                    <div className="w-1.5 h-1.5 bg-amber-500 rounded-full"></div>
                     <span>Creative excuses for being late</span>
                   </li>
                   <li className="flex items-center space-x-2">
-                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                    <div className="w-1.5 h-1.5 bg-amber-500 rounded-full"></div>
                     <span>Our questionable warranty policies</span>
                   </li>
                 </ul>
@@ -333,7 +333,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
             
             <button
               onClick={startConversation}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 flex items-center space-x-3 mx-auto"
+              className="bg-gradient-to-r from-amber-600 to-amber-500 text-white font-semibold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 flex items-center space-x-3 mx-auto"
             >
               <Play className="w-5 h-5" />
               <span>Start Voice Conversation</span>
@@ -346,8 +346,8 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
             <div className="relative">
               <div className={`w-32 h-32 rounded-2xl flex items-center justify-center mx-auto shadow-2xl transition-all duration-500 ${
                 conversation.isSpeaking 
-                  ? 'bg-gradient-to-br from-purple-500 to-pink-600' 
-                  : 'bg-gradient-to-br from-green-500 to-blue-600'
+                  ? 'bg-gradient-to-br from-amber-500 to-amber-600' 
+                  : 'bg-gradient-to-br from-green-500 to-emerald-600'
               }`}>
                 {conversation.isSpeaking ? (
                   <div className="flex space-x-1">
@@ -366,7 +366,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
                   <Mic className="w-16 h-16 text-white" />
                 )}
               </div>
-              <div className="absolute inset-0 bg-blue-500 opacity-20 blur-2xl rounded-full"></div>
+              <div className="absolute inset-0 bg-amber-500 opacity-20 blur-2xl rounded-full"></div>
             </div>
             
             <div className="space-y-3">
