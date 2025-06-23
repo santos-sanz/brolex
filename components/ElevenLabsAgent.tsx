@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { Mic, MicOff, Volume2, VolumeX, Loader2, AlertCircle, Crown, Sparkles } from 'lucide-react';
+import { Mic, MicOff, Volume2, VolumeX, Loader2, AlertCircle, Crown, Sparkles, Key, Eye, EyeOff } from 'lucide-react';
 
 interface ElevenLabsAgentProps {
   agentId: string;
@@ -19,20 +19,33 @@ declare global {
   }
 }
 
-const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey }) => {
+const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envApiKey }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [conversationStarted, setConversationStarted] = useState(false);
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
+  const [inputApiKey, setInputApiKey] = useState('');
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [currentApiKey, setCurrentApiKey] = useState(envApiKey);
   const agentRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!apiKey || !apiKey.startsWith('sk_')) {
-      setError('Please configure your ElevenLabs API key in the environment variables.');
+    // Check if we have an API key from environment or user input
+    if (envApiKey && envApiKey.startsWith('sk_')) {
+      setCurrentApiKey(envApiKey);
+      setShowApiKeyInput(false);
+    } else {
+      setShowApiKeyInput(true);
       setIsLoading(false);
+    }
+  }, [envApiKey]);
+
+  useEffect(() => {
+    if (!currentApiKey || !currentApiKey.startsWith('sk_')) {
       return;
     }
 
@@ -69,6 +82,9 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey }) =>
 
     const initializeAgent = async () => {
       try {
+        setIsLoading(true);
+        setError(null);
+        
         await loadElevenLabsScript();
         
         if (!window.ElevenLabs) {
@@ -78,7 +94,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey }) =>
         // Initialize the agent
         const agent = await window.ElevenLabs.Agent.startSession({
           agentId: agentId,
-          apiKey: apiKey,
+          apiKey: currentApiKey,
           onConnect: () => {
             console.log('Connected to ElevenLabs agent');
             setIsConnected(true);
@@ -90,7 +106,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey }) =>
           },
           onError: (error: any) => {
             console.error('ElevenLabs agent error:', error);
-            setError('Failed to connect to the AI agent. Please try again.');
+            setError('Failed to connect to the AI agent. Please check your API key and try again.');
             setIsLoading(false);
           },
           onMessage: (message: any) => {
@@ -105,7 +121,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey }) =>
         
       } catch (err) {
         console.error('Failed to initialize ElevenLabs agent:', err);
-        setError('Unable to load the AI agent. Please check your configuration and try again.');
+        setError('Unable to load the AI agent. Please check your API key and try again.');
         setIsLoading(false);
       }
     };
@@ -121,7 +137,17 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey }) =>
         }
       }
     };
-  }, [agentId, apiKey]);
+  }, [agentId, currentApiKey]);
+
+  const handleApiKeySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (inputApiKey.trim() && inputApiKey.startsWith('sk_')) {
+      setCurrentApiKey(inputApiKey.trim());
+      setShowApiKeyInput(false);
+    } else {
+      setError('Please enter a valid ElevenLabs API key (starts with "sk_")');
+    }
+  };
 
   const startConversation = () => {
     if (agentRef.current && isConnected) {
@@ -136,6 +162,114 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey }) =>
       // Implement mute functionality if available in the API
     }
   };
+
+  const resetApiKey = () => {
+    setCurrentApiKey('');
+    setInputApiKey('');
+    setShowApiKeyInput(true);
+    setIsConnected(false);
+    setConversationStarted(false);
+    setError(null);
+    if (agentRef.current) {
+      try {
+        window.ElevenLabs?.Agent.endSession();
+      } catch (err) {
+        console.error('Error ending session:', err);
+      }
+    }
+  };
+
+  // API Key Input Screen
+  if (showApiKeyInput) {
+    return (
+      <div className="h-full min-h-[500px] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl border border-slate-700 overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 p-6 text-white">
+          <div className="flex items-center space-x-3">
+            <div className="relative">
+              <Key className="w-6 h-6" />
+              <Sparkles className="w-3 h-3 absolute -top-1 -right-1 text-yellow-300" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold font-playfair">API Key Required</h3>
+              <p className="text-amber-100 text-sm">Enter your ElevenLabs API key to test the agent</p>
+            </div>
+          </div>
+        </div>
+
+        {/* API Key Input Form */}
+        <div className="flex-1 p-8 flex flex-col items-center justify-center">
+          <div className="w-full max-w-md space-y-6">
+            <div className="text-center space-y-4">
+              <div className="relative">
+                <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-amber-600 rounded-full flex items-center justify-center mx-auto shadow-2xl">
+                  <Key className="w-8 h-8 text-white" />
+                </div>
+                <div className="absolute inset-0 bg-amber-500 opacity-30 blur-2xl rounded-full"></div>
+              </div>
+              
+              <div>
+                <h4 className="text-2xl font-bold text-white font-playfair mb-2">
+                  Test the AI Agent
+                </h4>
+                <p className="text-slate-300 text-sm">
+                  Enter your ElevenLabs API key to start a conversation with our luxury timepiece consultant.
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleApiKeySubmit} className="space-y-4">
+              <div className="relative">
+                <input
+                  type={showApiKey ? 'text' : 'password'}
+                  value={inputApiKey}
+                  onChange={(e) => setInputApiKey(e.target.value)}
+                  placeholder="sk_..."
+                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent pr-12"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowApiKey(!showApiKey)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                >
+                  {showApiKey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              
+              {error && (
+                <div className="bg-red-900/50 border border-red-600 rounded-lg p-3">
+                  <p className="text-red-200 text-sm">{error}</p>
+                </div>
+              )}
+              
+              <button
+                type="submit"
+                disabled={!inputApiKey.trim() || !inputApiKey.startsWith('sk_')}
+                className="w-full bg-gradient-to-r from-amber-600 to-amber-500 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
+              >
+                <Key className="w-5 h-5" />
+                <span>Connect to Agent</span>
+              </button>
+            </form>
+
+            <div className="bg-slate-800 rounded-lg p-4 space-y-3">
+              <h5 className="text-amber-400 font-semibold text-sm">How to get your API key:</h5>
+              <ol className="text-xs text-slate-300 space-y-1 list-decimal list-inside">
+                <li>Visit <a href="https://elevenlabs.io" target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:underline">elevenlabs.io</a></li>
+                <li>Sign up or log in to your account</li>
+                <li>Go to your profile settings</li>
+                <li>Copy your API key (starts with "sk_")</li>
+              </ol>
+              <p className="text-xs text-slate-400 mt-2">
+                Your API key is only used for this session and is not stored.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -158,21 +292,20 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey }) =>
         <h3 className="text-lg font-semibold text-slate-900 mb-2">Connection Failed</h3>
         <p className="text-slate-600 text-center max-w-md mb-6">{error}</p>
         
-        <div className="bg-slate-50 rounded-lg p-4 mb-6 max-w-md">
-          <h4 className="font-medium text-slate-900 mb-2">Setup Instructions:</h4>
-          <ol className="text-sm text-slate-600 space-y-1 list-decimal list-inside">
-            <li>Get your API key from <a href="https://elevenlabs.io" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:underline">ElevenLabs</a></li>
-            <li>Add it to your .env.local file</li>
-            <li>Restart the development server</li>
-          </ol>
+        <div className="flex space-x-3">
+          <button
+            onClick={resetApiKey}
+            className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-2 rounded-lg transition-colors"
+          >
+            Try Different API Key
+          </button>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-slate-600 hover:bg-slate-700 text-white px-6 py-2 rounded-lg transition-colors"
+          >
+            Reload Page
+          </button>
         </div>
-        
-        <button
-          onClick={() => window.location.reload()}
-          className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-2 rounded-lg transition-colors"
-        >
-          Try Again
-        </button>
       </div>
     );
   }
@@ -195,9 +328,19 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey }) =>
             </div>
           </div>
           
-          <div className="flex items-center space-x-2">
-            <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'} animate-pulse`}></div>
-            <span className="text-sm">{isConnected ? 'Online' : 'Offline'}</span>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'} animate-pulse`}></div>
+              <span className="text-sm">{isConnected ? 'Online' : 'Offline'}</span>
+            </div>
+            
+            <button
+              onClick={resetApiKey}
+              className="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors"
+              title="Change API Key"
+            >
+              <Key className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>

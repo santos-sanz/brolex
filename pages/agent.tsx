@@ -108,6 +108,19 @@ export default function Agent() {
               />
             </div>
             
+            {/* Testing Notice */}
+            <div className="mt-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <div className="flex items-start space-x-3">
+                <Sparkles className="w-5 h-5 text-amber-600 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold text-amber-900 mb-1">Testing the AI Agent</h4>
+                  <p className="text-sm text-amber-800">
+                    If you don't have environment variables configured, you can enter your ElevenLabs API key directly in the interface above to test the agent functionality.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
             {/* Disclaimer */}
             <div className="mt-8 text-center">
               <p className="text-xs text-slate-500 max-w-2xl mx-auto">
