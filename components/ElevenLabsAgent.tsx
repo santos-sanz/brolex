@@ -70,7 +70,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
       // Start the conversation with your agent
       await conversation.startSession({
         agentId: agentId,
-        apiKey: currentApiKey,
+        authorization: `Bearer ${currentApiKey}`,
       });
 
       setConversationStarted(true);

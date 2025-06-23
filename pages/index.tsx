@@ -22,6 +22,7 @@ export default function Home() {
         />
       </Head>
       <Layout>
+        
         {/* Hero Section */}
         <section className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
           {/* Background Elements */}

@@ -1,9 +1,11 @@
 import Head from 'next/head';
 import Layout from '../components/Layout';
 import ElevenLabsAgent from '../components/ElevenLabsAgent';
+import RecommendedProducts from '../components/RecommendedProducts';
 import { useState, useEffect } from 'react';
 import { Crown, Sparkles, Star, Mic, Shield } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useProductDisplayTool } from '../utils/productDisplayTool';
 
 export default function Agent() {
   const [apiKey, setApiKey] = useState<string>('');
@@ -11,12 +13,24 @@ export default function Agent() {
   // Using the provided Agent ID
   const AGENT_ID = 'agent_01jybb45c6fcwapkfyh35etnqa';
   
+  // Initialize product display tool
+  const { 
+    recommendedProducts, 
+    initializeProductTool, 
+    removeProduct, 
+    clearProducts 
+  } = useProductDisplayTool();
+  
   useEffect(() => {
     // Get API key from environment variables
     const envApiKey = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY;
     if (envApiKey) {
       setApiKey(envApiKey);
     }
+    
+    // Initialize the product display tool
+    const cleanup = initializeProductTool();
+    return cleanup;
   }, []);
 
   return (
@@ -71,37 +85,7 @@ export default function Agent() {
               </p>
             </motion.div>
             
-            {/* Features */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"
-            >
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-                <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Crown className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="font-semibold text-white mb-2">Luxury Expertise</h3>
-                <p className="text-sm text-slate-300">Get recommendations based on your lifestyle and questionable taste in timepieces.</p>
-              </div>
-              
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-                <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Sparkles className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="font-semibold text-white mb-2">Creative Excuses</h3>
-                <p className="text-sm text-slate-300">Learn the art of being fashionably late with style and sophistication.</p>
-              </div>
-              
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-                <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Mic className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="font-semibold text-white mb-2">Voice Interaction</h3>
-                <p className="text-sm text-slate-300">Speak naturally with our AI for a premium consultation experience.</p>
-              </div>
-            </motion.div>
+
           </div>
         </section>
 
@@ -121,34 +105,12 @@ export default function Agent() {
               />
             </motion.div>
             
-            {/* Testing Notice */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.8 }}
-              className="mt-8 bg-gradient-to-r from-amber-50 to-amber-100 border border-amber-200 rounded-xl p-6"
-            >
-              <div className="flex items-start space-x-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-600 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-amber-900 mb-2">Testing the AI Agent</h4>
-                  <p className="text-sm text-amber-800 mb-3">
-                    If you don't have environment variables configured, you can enter your ElevenLabs API key directly in the interface above to test the agent functionality.
-                  </p>
-                  <div className="bg-white rounded-lg p-3 border border-amber-200">
-                    <h5 className="text-xs font-semibold text-amber-900 mb-2">Sample Questions to Ask:</h5>
-                    <ul className="text-xs text-amber-800 space-y-1">
-                      <li>• "What watch would you recommend for someone who's always late?"</li>
-                      <li>• "Tell me about the Subwrecker's water resistance."</li>
-                      <li>• "What's the best excuse for being 30 minutes late?"</li>
-                      <li>• "How does the Dayfaker's confidence display work?"</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
+            {/* Product Recommendations */}
+            <RecommendedProducts 
+              products={recommendedProducts}
+              onRemove={removeProduct}
+              onClearAll={clearProducts}
+            />
             
             {/* Disclaimer */}
             <motion.div 
