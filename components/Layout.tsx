@@ -2,7 +2,7 @@
 
 import { ReactNode } from 'react';
 import Link from 'next/link';
-import { Crown, ShoppingCart } from 'lucide-react';
+import { Crown, ShoppingCart, Sparkles } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { motion } from 'framer-motion';
 
@@ -34,8 +34,9 @@ export default function Layout({ children }: LayoutProps) {
                 Collection
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-amber-600 group-hover:w-full transition-all duration-300"></span>
               </Link>
-              <Link href="/agent" className="text-slate-700 hover:text-slate-900 transition-colors font-medium relative group">
-                AI Concierge
+              <Link href="/agent" className="text-slate-700 hover:text-slate-900 transition-colors font-medium relative group flex items-center space-x-1">
+                <Sparkles className="w-4 h-4" />
+                <span>AI Concierge</span>
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-amber-600 group-hover:w-full transition-all duration-300"></span>
               </Link>
               <Link href="#" className="text-slate-700 hover:text-slate-900 transition-colors font-medium relative group">
@@ -68,7 +69,58 @@ export default function Layout({ children }: LayoutProps) {
       </nav>
 
       {/* Main Content */}
-      <main>{children}</main>
+      <main className="flex-1">{children}</main>
+
+      {/* Footer */}
+      <footer className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center mb-6">
+              <div className="relative">
+                <Crown className="w-10 h-10 text-amber-500 mr-3 transform -rotate-12" />
+                <div className="absolute inset-0 bg-amber-500 opacity-30 blur-lg rounded-full"></div>
+              </div>
+              <span className="text-3xl font-bold font-playfair">Brolex</span>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+              <div>
+                <h3 className="font-semibold mb-4 text-amber-400">Customer Service</h3>
+                <ul className="space-y-2 text-sm text-slate-300">
+                  <li>AI Concierge Available 24/7*</li>
+                  <li>Dream Fulfillment Center</li>
+                  <li>Warranty Claims (Parallel Universe)</li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-4 text-amber-400">Company</h3>
+                <ul className="space-y-2 text-sm text-slate-300">
+                  <li>About Our Questionable Heritage</li>
+                  <li>Careers in Luxury Parody</li>
+                  <li>Press & Media Confusion</li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-4 text-amber-400">Legal</h3>
+                <ul className="space-y-2 text-sm text-slate-300">
+                  <li>Terms of Delusion</li>
+                  <li>Privacy Policy (What Privacy?)</li>
+                  <li>Cookie Preferences</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          <div className="border-t border-slate-700 pt-8 text-center">
+            <p className="text-slate-400 mb-2">
+              © 2025 Brolex — All rights reversed, some wrongs corrected.
+            </p>
+            <p className="text-xs text-slate-500">
+              Batteries not included, actual time may vary, side effects may include sudden urges to check your phone.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

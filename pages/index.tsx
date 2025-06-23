@@ -6,9 +6,9 @@ import WatchCard from '../components/WatchCard';
 import { Crown, ArrowRight, Star, Shield, Award, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { useState } from 'react';
 import type { Watch } from '../contexts/CartContext';
 import productsJson from '../data/products.json';
+
 const watches: Watch[] = productsJson as Watch[];
 
 export default function Home() {
@@ -74,7 +74,7 @@ export default function Home() {
             >
               <div className="flex items-center space-x-2 text-slate-300">
                 <Star className="w-5 h-5 text-amber-500" />
-                <span className="text-sm">&quot;Premium&quot; Craftsmanship*</span>
+                <span className="text-sm">"Premium" Craftsmanship*</span>
               </div>
               <div className="flex items-center space-x-2 text-slate-300">
                 <Shield className="w-5 h-5 text-amber-500" />
@@ -123,7 +123,7 @@ export default function Home() {
               className="text-center mb-16"
             >
               <h2 className="text-5xl font-bold mb-4 font-playfair text-slate-900">
-                Our &quot;Luxury&quot; Collection
+                Our "Luxury" Collection
               </h2>
               <p className="text-slate-600 mb-8 text-xl">
                 For those who value the appearance of punctuality more than actual timekeeping. Each piece is a conversation starter, especially when you&apos;re late.
@@ -160,57 +160,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-
-        {/* Footer */}
-        <footer className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white py-16 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-8">
-              <div className="flex items-center justify-center mb-6">
-                <div className="relative">
-                  <Crown className="w-10 h-10 text-amber-500 mr-3 transform -rotate-12" />
-                  <div className="absolute inset-0 bg-amber-500 opacity-30 blur-lg rounded-full"></div>
-                </div>
-                <span className="text-3xl font-bold font-playfair">Brolex</span>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-                <div>
-                  <h3 className="font-semibold mb-4 text-amber-400">Customer Service</h3>
-                  <ul className="space-y-2 text-sm text-slate-300">
-                    <li>AI Concierge Available 24/7*</li>
-                    <li>Dream Fulfillment Center</li>
-                    <li>Warranty Claims (Parallel Universe)</li>
-                  </ul>
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-4 text-amber-400">Company</h3>
-                  <ul className="space-y-2 text-sm text-slate-300">
-                    <li>About Our Questionable Heritage</li>
-                    <li>Careers in Luxury Parody</li>
-                    <li>Press & Media Confusion</li>
-                  </ul>
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-4 text-amber-400">Legal</h3>
-                  <ul className="space-y-2 text-sm text-slate-300">
-                    <li>Terms of Delusion</li>
-                    <li>Privacy Policy (What Privacy?)</li>
-                    <li>Cookie Preferences</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-            
-            <div className="border-t border-slate-700 pt-8 text-center">
-              <p className="text-slate-400 mb-2">
-                2025 Brolex — All rights reversed, some wrongs corrected.
-              </p>
-              <p className="text-xs text-slate-500">
-                Batteries not included, actual time may vary, side effects may include sudden urges to check your phone.
-              </p>
-            </div>
-          </div>
-        </footer>
       </Layout>
     </>
   );
