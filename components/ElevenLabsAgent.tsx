@@ -182,7 +182,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
   // API Key Input Screen
   if (showApiKeyInput) {
     return (
-      <div className="h-full min-h-[600px] flex flex-col">
+      <div className="h-full flex flex-col">
         {/* Compact Header */}
         <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 p-4 text-white">
           <div className="flex items-center space-x-3">
@@ -278,7 +278,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
 
   if (error && !conversationStarted) {
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[600px] bg-gradient-to-br from-red-50 to-white">
+      <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-red-50 to-white">
         <div className="text-center max-w-md space-y-6">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
             <AlertCircle className="w-8 h-8 text-red-500" />
@@ -302,7 +302,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
   }
 
   return (
-    <div className="h-full min-h-[600px] flex flex-col">
+    <div className="h-full flex flex-col">
       {/* Compact Header */}
       <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 p-4 text-white">
         <div className="flex items-center justify-between">
@@ -342,16 +342,18 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
         </div>
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex bg-gradient-to-br from-slate-50 to-white">
+      {/* Main Content Area - Reduced height and centered */}
+      <div className="flex-1 flex bg-gradient-to-br from-slate-50 to-white min-h-0">
         {/* Left Side - Agent Interface */}
-        <div className="flex-1 flex flex-col items-center justify-center p-6">
+        <div className="flex-1 flex flex-col items-center justify-center p-4">
           {conversation.status === 'connecting' && (
             <div className="space-y-4 text-center">
-              <ThreeJSAnimation 
-                isConnecting={true}
-                size={180}
-              />
+              <div className="flex items-center justify-center">
+                <ThreeJSAnimation 
+                  isConnecting={true}
+                  size={180}
+                />
+              </div>
               <Loader2 className="w-6 h-6 text-amber-600 animate-spin mx-auto" />
               <p className="text-slate-700 font-medium text-sm">Connecting...</p>
             </div>
@@ -359,8 +361,8 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
 
           {conversation.status === 'disconnected' && !conversationStarted && (
             <div className="space-y-6 max-w-md text-center">
-              {/* Three.js circular animation */}
-              <div className="relative">
+              {/* Three.js circular animation - centered */}
+              <div className="relative flex items-center justify-center">
                 <ThreeJSAnimation 
                   isConnecting={false}
                   isListening={false}
@@ -368,7 +370,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                   size={200}
                 />
                 
-                {/* Overlay button */}
+                {/* Overlay button - centered */}
                 <div className="absolute inset-0 flex items-center justify-center">
                   <button
                     onClick={startConversation}
@@ -390,8 +392,8 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
 
           {conversation.status === 'connected' && (
             <div className="space-y-6 w-full max-w-md text-center">
-              {/* Three.js listening/speaking animation */}
-              <div className="relative">
+              {/* Three.js listening/speaking animation - centered */}
+              <div className="relative flex items-center justify-center">
                 <ThreeJSAnimation 
                   isListening={!conversation.isSpeaking}
                   isSpeaking={conversation.isSpeaking}
@@ -399,7 +401,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                   size={200}
                 />
                 
-                {/* Status overlay */}
+                {/* Status overlay - centered */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="bg-white/90 backdrop-blur-sm text-slate-600 font-medium py-1 px-3 rounded-full shadow-lg border border-slate-200 text-sm">
                     {conversation.isSpeaking ? 'AI Speaking...' : 'Listening...'}

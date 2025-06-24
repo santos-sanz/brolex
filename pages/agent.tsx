@@ -37,11 +37,11 @@ export default function Agent() {
       </Head>
       
       <Layout>
-        {/* Main Agent Section - Full Height */}
-        <section className="min-h-screen bg-gradient-to-br from-slate-50 to-white py-8 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto h-full">
-            {/* Agent Container */}
-            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200 h-full min-h-[80vh]">
+        {/* Main Agent Section - Compact Height */}
+        <section className="bg-gradient-to-br from-slate-50 to-white py-8 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto">
+            {/* Agent Container - Reduced height */}
+            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200 h-[600px]">
               <ElevenLabsAgent 
                 agentId={AGENT_ID} 
                 apiKey={apiKey}
