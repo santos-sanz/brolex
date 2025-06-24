@@ -7,6 +7,8 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import ThreeJSAnimation from './ThreeJSAnimation';
 import type { RecommendedProduct } from '../utils/productDisplayTool';
+import { useCart } from '../contexts/CartContext';
+import toast from 'react-hot-toast';
 
 interface ElevenLabsError extends Error {
   code?: number;
@@ -36,6 +38,9 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
   const [currentApiKey, setCurrentApiKey] = useState(envApiKey);
   const [error, setError] = useState<string | null>(null);
   const [conversationStarted, setConversationStarted] = useState(false);
+  const [addToCartAnimation, setAddToCartAnimation] = useState(false);
+
+  const { addItem, openCart } = useCart();
 
   const conversation = useConversation({
     onConnect: () => {
@@ -161,6 +166,105 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
           console.error('❌ Error in closeProductCard:', error);
           return { success: false, error: `Failed to close product card: ${error}` };
         }
+      },
+
+      addProductToCart: async (parameters: any) => {
+        console.log('🛒 addProductToCart called with parameters:', parameters);
+        
+        try {
+          let productId: number;
+          let quantity: number = 1;
+          
+          // Extract product_id
+          if (parameters?.product_id !== undefined) {
+            productId = typeof parameters.product_id === 'string' 
+              ? parseInt(parameters.product_id, 10) 
+              : parameters.product_id;
+          } else if (parameters?.productId !== undefined) {
+            productId = typeof parameters.productId === 'string' 
+              ? parseInt(parameters.productId, 10) 
+              : parameters.productId;
+          } else if (parameters?.id !== undefined) {
+            productId = typeof parameters.id === 'string' 
+              ? parseInt(parameters.id, 10) 
+              : parameters.id;
+          } else if (typeof parameters === 'string') {
+            productId = parseInt(parameters, 10);
+          } else if (typeof parameters === 'number') {
+            productId = parameters;
+          } else {
+            return { success: false, error: 'Product ID is required' };
+          }
+          
+          // Extract quantity (optional)
+          if (parameters?.quantity !== undefined) {
+            quantity = typeof parameters.quantity === 'string' 
+              ? parseInt(parameters.quantity, 10) 
+              : parameters.quantity;
+          }
+          
+          // Validate inputs
+          if (isNaN(productId)) {
+            return { success: false, error: 'Invalid product ID format' };
+          }
+          
+          if (isNaN(quantity) || quantity < 1) {
+            quantity = 1; // Default to 1 if invalid
+          }
+          
+          // Find the product in our data
+          const productsJson = await import('../data/products.json');
+          const watches = productsJson.default;
+          const product = watches.find((watch: any) => watch.id === productId);
+          
+          if (!product) {
+            return { success: false, error: `Product with ID ${productId} not found` };
+          }
+          
+          // Trigger add to cart animation
+          setAddToCartAnimation(true);
+          setTimeout(() => setAddToCartAnimation(false), 1000);
+          
+          // Add to cart multiple times if quantity > 1
+          for (let i = 0; i < quantity; i++) {
+            addItem(product);
+          }
+          
+          // Show success toast with animation
+          toast.success(
+            `Added ${quantity}x ${product.name} to your collection! 👑`,
+            {
+              icon: '🛒',
+              duration: 3000,
+              style: {
+                background: '#1e293b',
+                color: '#f8fafc',
+                borderRadius: '12px',
+                border: '1px solid #334155',
+              },
+            }
+          );
+          
+          // Auto-open cart after a short delay
+          setTimeout(() => {
+            openCart();
+          }, 500);
+          
+          return {
+            success: true,
+            message: `Successfully added ${quantity}x ${product.name} to cart`,
+            product: {
+              id: product.id,
+              name: product.name,
+              price: product.price,
+              quantity: quantity
+            }
+          };
+          
+        } catch (error) {
+          console.error('❌ Error in addProductToCart:', error);
+          return { success: false, error: `Failed to add product to cart: ${error}` };
+        }
       }
     }
   });
@@ -229,6 +333,24 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     });
+  };
+
+  const handleAddToCart = () => {
+    if (currentProduct?.displayData) {
+      setAddToCartAnimation(true);
+      setTimeout(() => setAddToCartAnimation(false), 1000);
+      
+      addItem(currentProduct.displayData);
+      toast.success(`Added ${currentProduct.displayData.name} to your collection of dreams!`, {
+        icon: '👑',
+        duration: 3000,
+      });
+      
+      // Auto-open cart after a short delay
+      setTimeout(() => {
+        openCart();
+      }, 500);
+    }
   };
 
   // API Key Input Screen
@@ -613,7 +735,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                   )}
                 </motion.div>
 
-                {/* Add to Cart Button */}
+                {/* Add to Cart Button with Animation */}
                 <motion.button 
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ 
@@ -623,10 +745,46 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                   }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full bg-gradient-to-r from-slate-900 to-slate-800 text-white font-semibold py-2.5 px-4 rounded-lg shadow-lg hover:shadow-xl transform transition-all duration-300 flex items-center justify-center space-x-2 text-sm"
+                  onClick={handleAddToCart}
+                  className={`w-full font-semibold py-2.5 px-4 rounded-lg shadow-lg hover:shadow-xl transform transition-all duration-300 flex items-center justify-center space-x-2 text-sm relative overflow-hidden ${
+                    addToCartAnimation 
+                      ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white' 
+                      : 'bg-gradient-to-r from-slate-900 to-slate-800 text-white'
+                  }`}
                 >
-                  <ShoppingCart className="w-4 h-4" />
-                  <span>Add to Collection</span>
+                  {/* Animation overlay */}
+                  <AnimatePresence>
+                    {addToCartAnimation && (
+                      <motion.div
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center"
+                      >
+                        <motion.div
+                          initial={{ rotate: 0 }}
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 0.5 }}
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                        </motion.div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  
+                  {/* Button content */}
+                  <motion.div
+                    animate={{ 
+                      opacity: addToCartAnimation ? 0 : 1,
+                      scale: addToCartAnimation ? 0.8 : 1
+                    }}
+                    transition={{ duration: 0.2 }}
+                    className="flex items-center space-x-2"
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                    <span>Add to Collection</span>
+                  </motion.div>
                 </motion.button>
               </div>
             </motion.div>
