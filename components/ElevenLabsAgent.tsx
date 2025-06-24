@@ -5,6 +5,7 @@ import { useCallback, useState, useEffect } from 'react';
 import { Mic, Loader2, AlertCircle, Crown, Sparkles, Key, Eye, EyeOff, Play, Square, X, ShoppingCart } from 'lucide-react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
+import ThreeJSAnimation from './ThreeJSAnimation';
 import type { RecommendedProduct } from '../utils/productDisplayTool';
 
 interface ElevenLabsError extends Error {
@@ -348,12 +349,10 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
         <div className="flex-1 flex flex-col items-center justify-center p-8">
           {conversation.status === 'connecting' && (
             <div className="space-y-6 text-center">
-              <div className="relative">
-                <div className="w-32 h-32 bg-gradient-to-br from-amber-500 to-amber-600 rounded-full flex items-center justify-center mx-auto shadow-2xl">
-                  <Crown className="w-16 h-16 text-white animate-pulse" />
-                </div>
-                <div className="absolute inset-0 bg-amber-500 opacity-20 blur-2xl rounded-full animate-pulse"></div>
-              </div>
+              <ThreeJSAnimation 
+                isConnecting={true}
+                size={200}
+              />
               <Loader2 className="w-8 h-8 text-amber-600 animate-spin mx-auto" />
               <p className="text-slate-700 font-medium">Connecting to your luxury AI concierge...</p>
             </div>
@@ -361,16 +360,23 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
 
           {conversation.status === 'disconnected' && !conversationStarted && (
             <div className="space-y-8 max-w-lg text-center">
-              {/* ElevenLabs-style circular animation */}
-              <div className="relative w-48 h-48 mx-auto">
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 animate-spin" 
-                     style={{ 
-                       background: 'conic-gradient(from 0deg, #f59e0b, #d97706, #92400e, #f59e0b)',
-                       animationDuration: '3s'
-                     }}>
-                </div>
-                <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
-                  <Mic className="w-16 h-16 text-amber-600" />
+              {/* Three.js ElevenLabs-style animation */}
+              <div className="relative">
+                <ThreeJSAnimation 
+                  isConnecting={false}
+                  isListening={false}
+                  isSpeaking={false}
+                  size={240}
+                />
+                
+                {/* Overlay button */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <button
+                    onClick={startConversation}
+                    className="bg-white/90 backdrop-blur-sm text-slate-600 font-medium py-2 px-6 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 border border-slate-200"
+                  >
+                    Talk to interrupt
+                  </button>
                 </div>
               </div>
               
@@ -381,55 +387,33 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                 </p>
               </div>
               
-              <button
-                onClick={startConversation}
-                className="bg-gradient-to-r from-amber-600 to-amber-500 text-white font-semibold py-4 px-8 rounded-full shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 flex items-center space-x-3 mx-auto"
-              >
-                <Play className="w-5 h-5" />
-                <span>Talk to interrupt</span>
-              </button>
+              <div className="text-center text-sm text-slate-500">
+                <p>In-development calls are 50% off.</p>
+                <a href="#" className="text-amber-600 hover:underline">Learn more.</a>
+              </div>
             </div>
           )}
 
           {conversation.status === 'connected' && (
             <div className="space-y-8 w-full max-w-md text-center">
-              {/* ElevenLabs-style listening animation */}
-              <div className="relative w-48 h-48 mx-auto">
-                <div className={`absolute inset-0 rounded-full transition-all duration-500 ${
-                  conversation.isSpeaking 
-                    ? 'bg-gradient-to-br from-amber-500 to-amber-600' 
-                    : 'bg-gradient-to-br from-green-500 to-emerald-600'
-                }`} style={{ 
-                  background: conversation.isSpeaking 
-                    ? 'conic-gradient(from 0deg, #f59e0b, #d97706, #92400e, #f59e0b)'
-                    : 'conic-gradient(from 0deg, #10b981, #059669, #047857, #10b981)',
-                  animation: conversation.isSpeaking ? 'spin 2s linear infinite' : 'none'
-                }}>
-                </div>
-                <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
-                  {conversation.isSpeaking ? (
-                    <div className="flex space-x-1">
-                      {[...Array(5)].map((_, i) => (
-                        <div 
-                          key={i}
-                          className="w-2 bg-amber-600 rounded-full animate-pulse"
-                          style={{ 
-                            height: `${20 + Math.sin(Date.now() / 200 + i) * 15}px`,
-                            animationDelay: `${i * 100}ms`
-                          }}
-                        ></div>
-                      ))}
-                    </div>
-                  ) : (
-                    <Mic className="w-16 h-16 text-green-600" />
-                  )}
+              {/* Three.js listening/speaking animation */}
+              <div className="relative">
+                <ThreeJSAnimation 
+                  isListening={!conversation.isSpeaking}
+                  isSpeaking={conversation.isSpeaking}
+                  isConnecting={false}
+                  size={240}
+                />
+                
+                {/* Status overlay */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="bg-white/90 backdrop-blur-sm text-slate-600 font-medium py-1 px-4 rounded-full shadow-lg border border-slate-200">
+                    {conversation.isSpeaking ? 'AI Speaking...' : 'Listening...'}
+                  </div>
                 </div>
               </div>
               
               <div className="space-y-3">
-                <h4 className="text-xl font-bold text-slate-900">
-                  {conversation.isSpeaking ? 'AI Speaking...' : 'Listening...'}
-                </h4>
                 <p className="text-slate-600 text-sm">
                   {conversation.isSpeaking 
                     ? 'The AI concierge is providing luxury advice'
