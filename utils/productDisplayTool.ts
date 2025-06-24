@@ -33,8 +33,8 @@ export function useProductDisplayTool() {
           
           // Add event listener for the custom tool events from ElevenLabs
           window.addEventListener('elivedemo:tool-request', (event: any) => {
-            if (event.detail?.tools?.showProduct) {
-              handleProductDisplay(event.detail.tools.showProduct);
+            if (event.detail?.tools?.showProductCard) {
+              handleProductDisplay(event.detail.tools.showProductCard);
             }
           });
           

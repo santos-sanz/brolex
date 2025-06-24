@@ -13,7 +13,7 @@ window.addEventListener('DOMContentLoaded', () => {
 function initializeProductTool(widget) {
   // Define the tool
   const productTool = {
-    name: "showProduct",
+    name: "showProductCard",
     description: "Displays a specific product on the screen",
     parameters: {
       type: "object",
@@ -38,14 +38,14 @@ function initializeProductTool(widget) {
   // When the agent calls the tool, a custom event will be dispatched
   // This event will be captured by the React component in productDisplayTool.ts
   widget.addEventListener('tool-call', (event) => {
-    if (event.detail?.name === 'showProduct') {
+    if (event.detail?.name === 'showProductCard') {
       const data = event.detail?.parameters || {};
       
       // Create and dispatch a custom event that our React hook will listen for
       const toolEvent = new CustomEvent('elivedemo:tool-request', {
         detail: {
           tools: {
-            showProduct: data
+            showProductCard: data
           }
         }
       });
