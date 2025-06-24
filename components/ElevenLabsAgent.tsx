@@ -80,11 +80,11 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
       // Request microphone permission
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      // Start the conversation with correct authorization format
+      // Start the conversation with the correct authorization format for ElevenLabs React SDK
       await conversation.startSession({
         agentId: agentId,
-        // Remove the "Bearer " prefix - the SDK handles this internally
-        authorization: currentApiKey,
+        // Use the 'apiKey' parameter instead of 'authorization'
+        apiKey: currentApiKey,
       });
 
       setConversationStarted(true);
