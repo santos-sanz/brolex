@@ -17,6 +17,7 @@ interface ElevenLabsAgentProps {
   agentId: string;
   apiKey: string;
   onShowProductCard?: (parameters: { productId: number | string; name?: string; price?: string; image?: string; description?: string }) => void;
+  onCloseProductCard?: (productId?: number | string) => void;
   currentProduct?: RecommendedProduct | null;
   onRemoveProduct?: (productId: number) => void;
 }
@@ -25,6 +26,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
   agentId, 
   apiKey: envApiKey, 
   onShowProductCard,
+  onCloseProductCard,
   currentProduct,
   onRemoveProduct
 }) => {
@@ -108,6 +110,56 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
         } catch (error) {
           console.error('❌ Error in showProductCard:', error);
           return { success: false, error: `Failed to display product: ${error}` };
+        }
+      },
+
+      closeProductCard: async (parameters: any) => {
+        console.log('🎯 closeProductCard called with parameters:', parameters);
+        
+        try {
+          let productId: number | undefined;
+          
+          // Handle different parameter formats
+          if (parameters?.product_id !== undefined) {
+            productId = typeof parameters.product_id === 'string' 
+              ? parseInt(parameters.product_id, 10) 
+              : parameters.product_id;
+          } else if (parameters?.productId !== undefined) {
+            productId = typeof parameters.productId === 'string' 
+              ? parseInt(parameters.productId, 10) 
+              : parameters.productId;
+          } else if (parameters?.id !== undefined) {
+            productId = typeof parameters.id === 'string' 
+              ? parseInt(parameters.id, 10) 
+              : parameters.id;
+          } else if (typeof parameters === 'string' && parameters.trim() !== '') {
+            productId = parseInt(parameters, 10);
+          } else if (typeof parameters === 'number') {
+            productId = parameters;
+          }
+          
+          // If productId is provided but invalid, return error
+          if (productId !== undefined && isNaN(productId)) {
+            return { success: false, error: 'Invalid product ID format' };
+          }
+          
+          if (onCloseProductCard) {
+            onCloseProductCard(productId);
+            
+            const message = productId !== undefined 
+              ? `Product ${productId} has been closed successfully`
+              : 'All product cards have been closed successfully';
+            
+            return {
+              success: true,
+              message
+            };
+          }
+          
+          return { success: false, error: 'Product close handler not available' };
+        } catch (error) {
+          console.error('❌ Error in closeProductCard:', error);
+          return { success: false, error: `Failed to close product card: ${error}` };
         }
       }
     }

@@ -50,12 +50,35 @@ export function useProductDisplayTool() {
     }
   };
 
-  // Remove a product from the display
+  // Handler for closing product cards
+  const handleCloseProductCard = (productId?: number | string) => {
+    console.log('🎯 handleCloseProductCard called with productId:', productId);
+    
+    if (productId !== undefined) {
+      // Close specific product
+      const targetId = typeof productId === 'string' 
+        ? parseInt(productId, 10) 
+        : productId;
+      
+      if (!isNaN(targetId)) {
+        setRecommendedProducts(prev => prev.filter(p => p.productId !== targetId));
+        console.log(`✅ Closed product with ID: ${targetId}`);
+      } else {
+        console.warn(`❌ Invalid product ID for closing: ${productId}`);
+      }
+    } else {
+      // Close all products
+      setRecommendedProducts([]);
+      console.log('✅ Closed all product cards');
+    }
+  };
+
+  // Remove a product from the display (legacy method)
   const removeProduct = (productId: number) => {
     setRecommendedProducts([]);
   };
 
-  // Clear all displayed products
+  // Clear all displayed products (legacy method)
   const clearProducts = () => {
     setRecommendedProducts([]);
   };
@@ -63,6 +86,7 @@ export function useProductDisplayTool() {
   return {
     recommendedProducts,
     handleProductDisplay,
+    handleCloseProductCard,
     removeProduct,
     clearProducts
   };

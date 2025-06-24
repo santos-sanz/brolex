@@ -14,6 +14,7 @@ export default function Agent() {
   const { 
     recommendedProducts, 
     handleProductDisplay,
+    handleCloseProductCard,
     removeProduct, 
     clearProducts 
   } = useProductDisplayTool();
@@ -46,6 +47,7 @@ export default function Agent() {
                 agentId={AGENT_ID} 
                 apiKey={apiKey}
                 onShowProductCard={handleProductDisplay}
+                onCloseProductCard={handleCloseProductCard}
                 currentProduct={recommendedProducts[0] || null}
                 onRemoveProduct={removeProduct}
               />
