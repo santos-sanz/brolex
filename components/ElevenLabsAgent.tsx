@@ -93,8 +93,8 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
       // Start the conversation with the correct authorization format for ElevenLabs React SDK
       await conversation.startSession({
         agentId: agentId,
-        // The SDK expects the raw API key, not in Bearer format
-        authorization: currentApiKey,
+        // The SDK expects the API key in Bearer token format
+        authorization: 'Bearer ' + currentApiKey,
       });
 
       setConversationStarted(true);
