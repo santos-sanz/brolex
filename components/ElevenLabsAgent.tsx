@@ -62,7 +62,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
       setError(`Connection failed. Please check your API key and try again.`);
     },
     clientTools: {
-      showProductCard: async (parameters: any) => {
+      showProductCard: async (parameters: any): Promise<string | void> => {
         console.log('🎯 showProductCard called with parameters:', parameters);
         
         try {
@@ -90,12 +90,14 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
             if (numberMatch) {
               productId = parseInt(numberMatch[0], 10);
             } else {
-              return { success: false, error: 'No valid product ID provided.' };
+              console.error('No valid product ID provided.');
+              return 'No valid product ID provided.';
             }
           }
           
           if (isNaN(productId)) {
-            return { success: false, error: 'Invalid product ID format' };
+            console.error('Invalid product ID format');
+            return 'Invalid product ID format';
           }
           
           if (onShowProductCard) {
@@ -107,20 +109,19 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
               description: parameters?.description
             });
             
-            return {
-              success: true,
-              message: `Product ${productId} has been displayed successfully`
-            };
+            return `Product ${productId} has been displayed successfully`;
           }
           
-          return { success: false, error: 'Product display handler not available' };
+          console.error('Product display handler not available');
+          return 'Product display handler not available';
         } catch (error) {
-          console.error('❌ Error in showProductCard:', error);
-          return { success: false, error: `Failed to display product: ${error}` };
+          const errorMessage = `Failed to display product: ${error}`;
+          console.error('❌ Error in showProductCard:', errorMessage);
+          return errorMessage;
         }
       },
 
-      closeProductCard: async (parameters: any) => {
+      closeProductCard: async (parameters: any): Promise<string | void> => {
         console.log('🎯 closeProductCard called with parameters:', parameters);
         
         try {
@@ -147,30 +148,30 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
           
           // If productId is provided but invalid, return error
           if (productId !== undefined && isNaN(productId)) {
-            return { success: false, error: 'Invalid product ID format' };
+            const errorMessage = 'Invalid product ID format';
+            console.error(errorMessage);
+            return errorMessage;
           }
           
           if (onCloseProductCard) {
             onCloseProductCard(productId);
             
-            const message = productId !== undefined 
+            return productId !== undefined 
               ? `Product ${productId} has been closed successfully`
               : 'All product cards have been closed successfully';
-            
-            return {
-              success: true,
-              message
-            };
           }
           
-          return { success: false, error: 'Product close handler not available' };
+          const errorMessage = 'Product close handler not available';
+          console.error(errorMessage);
+          return errorMessage;
         } catch (error) {
-          console.error('❌ Error in closeProductCard:', error);
-          return { success: false, error: `Failed to close product card: ${error}` };
+          const errorMessage = `Failed to close product card: ${error}`;
+          console.error('❌ Error in closeProductCard:', errorMessage);
+          return errorMessage;
         }
       },
 
-      addProductToCart: async (parameters: any) => {
+      addProductToCart: async (parameters: any): Promise<string | void> => {
         console.log('🛒 addProductToCart called with parameters:', parameters);
         
         try {
@@ -200,7 +201,9 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
               productId = currentProduct.displayData.id;
               console.log('🎯 Using currently displayed product ID:', productId);
             } else {
-              return { success: false, error: 'Product ID is required and no product is currently displayed' };
+              const errorMessage = 'Product ID is required and no product is currently displayed';
+              console.error(errorMessage);
+              return errorMessage;
             }
           }
           
@@ -213,7 +216,9 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
           
           // Validate inputs
           if (isNaN(productId)) {
-            return { success: false, error: 'Invalid product ID format' };
+            const errorMessage = 'Invalid product ID format';
+            console.error(errorMessage);
+            return errorMessage;
           }
           
           if (isNaN(quantity) || quantity < 1) {
@@ -224,10 +229,9 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
           const product = watches.find((watch: any) => watch.id === productId);
           
           if (!product) {
-            return { 
-              success: false, 
-              error: `Product with ID ${productId} not found. Available products: ${watches.map((w: any) => w.id).join(', ')}` 
-            };
+            const errorMessage = `Product with ID ${productId} not found. Available products: ${watches.map((w: any) => w.id).join(', ')}`;
+            console.error(errorMessage);
+            return errorMessage;
           }
           
           console.log('✅ Found product:', product.name);
@@ -262,20 +266,12 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
             openCart();
           }, 1000);
           
-          return {
-            success: true,
-            message: `Successfully added ${quantity}x ${product.name} to cart`,
-            product: {
-              id: product.id,
-              name: product.name,
-              price: product.price,
-              quantity: quantity
-            }
-          };
+          return `Successfully added ${quantity}x ${product.name} to cart`;
           
         } catch (error) {
-          console.error('❌ Error in addProductToCart:', error);
-          return { success: false, error: `Failed to add product to cart: ${error}` };
+          const errorMessage = `Failed to add product to cart: ${error}`;
+          console.error('❌ Error in addProductToCart:', errorMessage);
+          return errorMessage;
         }
       }
     }
