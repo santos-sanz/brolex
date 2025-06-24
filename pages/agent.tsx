@@ -10,7 +10,7 @@ import { useProductDisplayTool } from '../utils/productDisplayTool';
 export default function Agent() {
   const [apiKey, setApiKey] = useState<string>('');
   
-  // Using the provided Agent ID
+  // Using the EXACT agent ID you specified
   const AGENT_ID = 'agent_01jybb45c6fcwapkfyh35etnqa';
   
   // Initialize product display tool
@@ -85,7 +85,22 @@ export default function Agent() {
               </p>
             </motion.div>
             
-
+            {/* Debug info to verify agent ID */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="mb-8"
+            >
+              <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-4 border border-slate-700 max-w-md mx-auto">
+                <p className="text-slate-300 text-sm">
+                  <span className="text-amber-400 font-medium">Agent ID:</span> {AGENT_ID}
+                </p>
+                <p className="text-slate-400 text-xs mt-1">
+                  Connecting to your luxury timepiece consultant
+                </p>
+              </div>
+            </motion.div>
           </div>
         </section>
 
