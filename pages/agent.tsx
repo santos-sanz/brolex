@@ -30,10 +30,10 @@ export default function Agent() {
   return (
     <>
       <Head>
-        <title>Brolex AI Concierge – Luxury Watch Assistant</title>
-        <meta 
-          name="description" 
-          content="Chat with our AI concierge about Brolex luxury watches. Get personalized recommendations and creative excuses for being late." 
+        <title>Brolex AI – Ask a Watch, Get a Wink</title>
+        <meta
+          name="description"
+          content="Consult our AI for questionable watch advice and impeccable sarcasm."
         />
       </Head>
       
