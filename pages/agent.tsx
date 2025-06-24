@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Script from 'next/script';
 import Layout from '../components/Layout';
 import ElevenLabsAgent from '../components/ElevenLabsAgent';
 import RecommendedProducts from '../components/RecommendedProducts';
@@ -42,6 +43,9 @@ export default function Agent() {
           content="Chat with our AI concierge about Brolex luxury watches. Get personalized recommendations and creative excuses for being late." 
         />
       </Head>
+      
+      {/* Load the product tool handler script */}
+      <Script src="/js/productToolHandler.js" strategy="afterInteractive" />
       
       <Layout>
         {/* Hero Section */}

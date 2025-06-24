@@ -1,80 +1,71 @@
-// Initialize the ElevenLabs Tool for product recommendations
-window.addEventListener('DOMContentLoaded', () => {
-  // Wait for the ElevenLabs widget to load
-  const checkForWidget = setInterval(() => {
-    const widget = document.querySelector('elevenlabs-convai');
-    if (widget) {
-      clearInterval(checkForWidget);
-      initializeProductTool(widget);
-    }
-  }, 1000);
-});
+// Product Tool Handler for ElevenLabs Agent
+// This script registers the showProductCard client tool with the ElevenLabs widget
 
-function initializeProductTool(widget) {
-  // Define the tool
-  const productTool = {
-    name: "showProductCard",
-    description: "Displays a specific product on the screen",
-    parameters: {
-      type: "object",
-      properties: {
-        productId: {
-          type: "number",
-          description: "The ID of the product to display"
-        }
-      },
-      required: ["productId"]
-    },
-    // Add a handler function that returns a Promise
-    handler: async (params) => {
-      console.log('Product tool handler called with params:', params);
+(function() {
+  'use strict';
+  
+  console.log('Product Tool Handler: Script loaded');
+  
+  // Function to register the client tool
+  function registerProductTool() {
+    // Check if ElevenLabs widget is available
+    if (typeof window.ElevenLabsWidget !== 'undefined' && window.ElevenLabsWidget.registerClientTool) {
+      console.log('Product Tool Handler: Registering showProductCard tool');
       
-      // Create and dispatch a custom event that our React hook will listen for
-      const toolEvent = new CustomEvent('elivedemo:tool-request', {
-        detail: {
-          tools: {
-            showProductCard: params
-          }
+      window.ElevenLabsWidget.registerClientTool('showProductCard', function(parameters) {
+        console.log('Product Tool Handler: showProductCard called with parameters:', parameters);
+        
+        try {
+          // Extract product information from parameters
+          const { productId, name, price, image, description } = parameters;
+          
+          // Dispatch a custom event to communicate with React components
+          const event = new CustomEvent('showProductCard', {
+            detail: {
+              productId: productId || `product_${Date.now()}`,
+              name: name || 'Luxury Timepiece',
+              price: price || '$999',
+              image: image || '/placeholder-watch.jpg',
+              description: description || 'A magnificent timepiece for the discerning individual.'
+            }
+          });
+          
+          window.dispatchEvent(event);
+          
+          console.log('Product Tool Handler: Product card event dispatched');
+          
+          // Return success response
+          return {
+            success: true,
+            message: `Product "${name}" has been displayed`
+          };
+          
+        } catch (error) {
+          console.error('Product Tool Handler: Error in showProductCard:', error);
+          return {
+            success: false,
+            error: error.message
+          };
         }
       });
       
-      window.dispatchEvent(toolEvent);
-      
-      // Resolve the promise with a success response
-      return { status: 'success', message: 'Product displayed successfully' };
+      console.log('Product Tool Handler: Tool registration complete');
+    } else {
+      console.log('Product Tool Handler: ElevenLabs widget not ready, retrying...');
+      // Retry after a short delay
+      setTimeout(registerProductTool, 500);
     }
-  };
-
-  // Register the tool with the widget
-  if (typeof widget.registerClientTool === 'function') {
-    widget.registerClientTool(productTool);
-    console.log("Product tool registered successfully with ElevenLabs widget as client tool");
-  } else if (typeof widget.registerAgentTool === 'function') {
-    widget.registerAgentTool(productTool);
-    console.log("Product tool registered successfully with ElevenLabs widget as agent tool");
-  } else {
-    console.warn("No tool registration method found on ElevenLabs widget");
   }
-
-  // Also listen for tool-call events for backwards compatibility
-  widget.addEventListener('tool-call', (event) => {
-    if (event.detail?.name === 'showProductCard') {
-      const data = event.detail?.parameters || {};
-      
-      // Create and dispatch a custom event that our React hook will listen for
-      const toolEvent = new CustomEvent('elivedemo:tool-request', {
-        detail: {
-          tools: {
-            showProductCard: data
-          }
-        }
-      });
-      
-      window.dispatchEvent(toolEvent);
-      console.log('Product display tool called via event:', data);
-      
-      // Return success to the agent
-      return { status: 'success' };
-    }
-  });
-}
+  
+  // Wait for DOM to be ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', registerProductTool);
+  } else {
+    // DOM is already ready
+    registerProductTool();
+  }
+  
+  // Also try to register when the window loads (fallback)
+  window.addEventListener('load', registerProductTool);
+  
+})();
