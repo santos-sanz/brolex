@@ -28,19 +28,11 @@ export default function Layout({ children }: LayoutProps) {
               <span className="text-2xl font-bold text-slate-900 font-playfair">Brolex</span>
             </Link>
 
-            {/* Navigation Links */}
+            {/* Navigation Links - Only AI Concierge */}
             <div className="hidden md:flex items-center space-x-8">
-              <Link href="/" className="text-slate-700 hover:text-slate-900 transition-colors font-medium relative group">
-                Collection
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-amber-600 group-hover:w-full transition-all duration-300"></span>
-              </Link>
               <Link href="/agent" className="text-slate-700 hover:text-slate-900 transition-colors font-medium relative group flex items-center space-x-1">
                 <Sparkles className="w-4 h-4" />
                 <span>AI Concierge</span>
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-amber-600 group-hover:w-full transition-all duration-300"></span>
-              </Link>
-              <Link href="#" className="text-slate-700 hover:text-slate-900 transition-colors font-medium relative group">
-                Heritage
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-amber-600 group-hover:w-full transition-all duration-300"></span>
               </Link>
             </div>

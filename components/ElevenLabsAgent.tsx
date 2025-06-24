@@ -432,18 +432,48 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
           )}
         </div>
 
-        {/* Right Side - Product Display */}
-        <AnimatePresence>
+        {/* Right Side - Product Display with Smooth Animation */}
+        <AnimatePresence mode="wait">
           {currentProduct && currentProduct.displayData && (
             <motion.div
-              initial={{ x: '100%', opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: '100%', opacity: 0 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="w-72 bg-white border-l border-slate-200 flex flex-col"
+              key={currentProduct.productId}
+              initial={{ x: '100%', opacity: 0, scale: 0.95 }}
+              animate={{ 
+                x: 0, 
+                opacity: 1, 
+                scale: 1,
+                transition: {
+                  type: 'spring',
+                  damping: 30,
+                  stiffness: 300,
+                  mass: 0.8,
+                  opacity: { duration: 0.3 },
+                  scale: { duration: 0.4, delay: 0.1 }
+                }
+              }}
+              exit={{ 
+                x: '100%', 
+                opacity: 0, 
+                scale: 0.95,
+                transition: {
+                  type: 'spring',
+                  damping: 25,
+                  stiffness: 200,
+                  duration: 0.3
+                }
+              }}
+              className="w-72 bg-white border-l border-slate-200 flex flex-col shadow-xl"
             >
               {/* Product Header */}
-              <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-3 text-white">
+              <motion.div 
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ 
+                  y: 0, 
+                  opacity: 1,
+                  transition: { delay: 0.2, duration: 0.3 }
+                }}
+                className="bg-gradient-to-r from-slate-800 to-slate-900 p-3 text-white"
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <Crown className="w-4 h-4 text-amber-400" />
@@ -456,12 +486,20 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                     <X className="w-3 h-3" />
                   </button>
                 </div>
-              </div>
+              </motion.div>
 
               {/* Product Content */}
               <div className="flex-1 p-4 space-y-4">
                 {/* Product Image */}
-                <div className="relative aspect-square rounded-lg overflow-hidden bg-slate-100">
+                <motion.div 
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ 
+                    scale: 1, 
+                    opacity: 1,
+                    transition: { delay: 0.3, duration: 0.4, type: 'spring', damping: 20 }
+                  }}
+                  className="relative aspect-square rounded-lg overflow-hidden bg-slate-100"
+                >
                   <Image
                     src={currentProduct.displayData.image}
                     alt={currentProduct.displayData.name}
@@ -469,10 +507,18 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                     className="object-cover"
                     sizes="288px"
                   />
-                </div>
+                </motion.div>
 
                 {/* Product Info */}
-                <div className="space-y-3">
+                <motion.div 
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ 
+                    y: 0, 
+                    opacity: 1,
+                    transition: { delay: 0.4, duration: 0.3 }
+                  }}
+                  className="space-y-3"
+                >
                   <div>
                     <h3 className="text-lg font-bold text-slate-900 font-playfair">
                       {currentProduct.displayData.name}
@@ -496,21 +542,40 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                       <h4 className="font-semibold text-slate-900 text-xs">Features:</h4>
                       <ul className="space-y-1">
                         {currentProduct.displayData.features.slice(0, 3).map((feature, index) => (
-                          <li key={index} className="text-xs text-slate-600 flex items-start space-x-2">
+                          <motion.li 
+                            key={index}
+                            initial={{ x: -10, opacity: 0 }}
+                            animate={{ 
+                              x: 0, 
+                              opacity: 1,
+                              transition: { delay: 0.5 + index * 0.1, duration: 0.3 }
+                            }}
+                            className="text-xs text-slate-600 flex items-start space-x-2"
+                          >
                             <div className="w-1 h-1 bg-amber-500 rounded-full mt-1.5 flex-shrink-0"></div>
                             <span>{feature}</span>
-                          </li>
+                          </motion.li>
                         ))}
                       </ul>
                     </div>
                   )}
-                </div>
+                </motion.div>
 
                 {/* Add to Cart Button */}
-                <button className="w-full bg-gradient-to-r from-slate-900 to-slate-800 text-white font-semibold py-2.5 px-4 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center space-x-2 text-sm">
+                <motion.button 
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ 
+                    y: 0, 
+                    opacity: 1,
+                    transition: { delay: 0.6, duration: 0.3 }
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full bg-gradient-to-r from-slate-900 to-slate-800 text-white font-semibold py-2.5 px-4 rounded-lg shadow-lg hover:shadow-xl transform transition-all duration-300 flex items-center justify-center space-x-2 text-sm"
+                >
                   <ShoppingCart className="w-4 h-4" />
                   <span>Add to Collection</span>
-                </button>
+                </motion.button>
               </div>
             </motion.div>
           )}
