@@ -87,11 +87,13 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
       // Request microphone permission
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      // Start the conversation with the correct format for ElevenLabs React SDK
-      // Try different authorization formats based on ElevenLabs documentation
+      // Log the API key (first few characters for security)
+      console.log('Using API key:', currentApiKey ? `${currentApiKey.substring(0, 5)}...` : 'No API key provided');
+      
+      // Start the conversation with the correct authorization format for ElevenLabs React SDK
       await conversation.startSession({
         agentId: agentId,
-        // Use just the API key without "Bearer" prefix
+        // The SDK expects the raw API key, not in Bearer format
         authorization: currentApiKey,
       });
 
