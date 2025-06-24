@@ -9,6 +9,7 @@ import ThreeJSAnimation from './ThreeJSAnimation';
 import type { RecommendedProduct } from '../utils/productDisplayTool';
 import { useCart } from '../contexts/CartContext';
 import toast from 'react-hot-toast';
+import productsJson from '../data/products.json';
 
 interface ElevenLabsError extends Error {
   code?: number;
@@ -41,21 +42,22 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
   const [addToCartAnimation, setAddToCartAnimation] = useState(false);
 
   const { addItem, openCart } = useCart();
+  const watches = productsJson;
 
   const conversation = useConversation({
     onConnect: () => {
-      console.log('Connected to ElevenLabs agent');
+      console.log('✅ Connected to ElevenLabs agent');
       setError(null);
     },
     onDisconnect: () => {
-      console.log('Disconnected from ElevenLabs agent');
+      console.log('❌ Disconnected from ElevenLabs agent');
       setConversationStarted(false);
     },
     onMessage: (message) => {
-      console.log('Agent message:', message);
+      console.log('💬 Agent message:', message);
     },
     onError: (error: unknown) => {
-      console.error('ElevenLabs agent error:', error);
+      console.error('❌ ElevenLabs agent error:', error);
       const elevenLabsError = error as ElevenLabsError;
       setError(`Connection failed. Please check your API key and try again.`);
     },
@@ -175,7 +177,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
           let productId: number;
           let quantity: number = 1;
           
-          // Extract product_id
+          // Extract product_id with multiple fallback formats
           if (parameters?.product_id !== undefined) {
             productId = typeof parameters.product_id === 'string' 
               ? parseInt(parameters.product_id, 10) 
@@ -193,7 +195,13 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
           } else if (typeof parameters === 'number') {
             productId = parameters;
           } else {
-            return { success: false, error: 'Product ID is required' };
+            // Try to extract from currently displayed product
+            if (currentProduct?.displayData?.id) {
+              productId = currentProduct.displayData.id;
+              console.log('🎯 Using currently displayed product ID:', productId);
+            } else {
+              return { success: false, error: 'Product ID is required and no product is currently displayed' };
+            }
           }
           
           // Extract quantity (optional)
@@ -213,17 +221,20 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
           }
           
           // Find the product in our data
-          const productsJson = await import('../data/products.json');
-          const watches = productsJson.default;
           const product = watches.find((watch: any) => watch.id === productId);
           
           if (!product) {
-            return { success: false, error: `Product with ID ${productId} not found` };
+            return { 
+              success: false, 
+              error: `Product with ID ${productId} not found. Available products: ${watches.map((w: any) => w.id).join(', ')}` 
+            };
           }
+          
+          console.log('✅ Found product:', product.name);
           
           // Trigger add to cart animation
           setAddToCartAnimation(true);
-          setTimeout(() => setAddToCartAnimation(false), 1000);
+          setTimeout(() => setAddToCartAnimation(false), 1500);
           
           // Add to cart multiple times if quantity > 1
           for (let i = 0; i < quantity; i++) {
@@ -235,12 +246,13 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
             `Added ${quantity}x ${product.name} to your collection! 👑`,
             {
               icon: '🛒',
-              duration: 3000,
+              duration: 4000,
               style: {
-                background: '#1e293b',
+                background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
                 color: '#f8fafc',
                 borderRadius: '12px',
-                border: '1px solid #334155',
+                border: '1px solid #f59e0b',
+                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
               },
             }
           );
@@ -248,7 +260,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
           // Auto-open cart after a short delay
           setTimeout(() => {
             openCart();
-          }, 500);
+          }, 800);
           
           return {
             success: true,
@@ -338,18 +350,25 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
   const handleAddToCart = () => {
     if (currentProduct?.displayData) {
       setAddToCartAnimation(true);
-      setTimeout(() => setAddToCartAnimation(false), 1000);
+      setTimeout(() => setAddToCartAnimation(false), 1500);
       
       addItem(currentProduct.displayData);
       toast.success(`Added ${currentProduct.displayData.name} to your collection of dreams!`, {
         icon: '👑',
         duration: 3000,
+        style: {
+          background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+          color: '#f8fafc',
+          borderRadius: '12px',
+          border: '1px solid #f59e0b',
+          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
+        },
       });
       
       // Auto-open cart after a short delay
       setTimeout(() => {
         openCart();
-      }, 500);
+      }, 800);
     }
   };
 
@@ -735,7 +754,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                   )}
                 </motion.div>
 
-                {/* Add to Cart Button with Animation */}
+                {/* Add to Cart Button with Enhanced Animation */}
                 <motion.button 
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ 
@@ -748,28 +767,41 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                   onClick={handleAddToCart}
                   className={`w-full font-semibold py-2.5 px-4 rounded-lg shadow-lg hover:shadow-xl transform transition-all duration-300 flex items-center justify-center space-x-2 text-sm relative overflow-hidden ${
                     addToCartAnimation 
-                      ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white' 
+                      ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white scale-105' 
                       : 'bg-gradient-to-r from-slate-900 to-slate-800 text-white'
                   }`}
                 >
-                  {/* Animation overlay */}
+                  {/* Enhanced Animation overlay */}
                   <AnimatePresence>
                     {addToCartAnimation && (
-                      <motion.div
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center"
-                      >
+                      <>
+                        {/* Ripple effect */}
                         <motion.div
-                          initial={{ rotate: 0 }}
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 0.5 }}
+                          initial={{ scale: 0, opacity: 0.8 }}
+                          animate={{ scale: 4, opacity: 0 }}
+                          exit={{ scale: 0, opacity: 0 }}
+                          transition={{ duration: 0.6, ease: "easeOut" }}
+                          className="absolute inset-0 bg-green-400 rounded-lg"
+                        />
+                        
+                        {/* Success checkmark */}
+                        <motion.div
+                          initial={{ scale: 0, opacity: 0, rotate: -180 }}
+                          animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                          exit={{ scale: 0, opacity: 0 }}
+                          transition={{ duration: 0.4, delay: 0.2 }}
+                          className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center rounded-lg"
                         >
-                          <ShoppingCart className="w-4 h-4" />
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: [0, 1.2, 1] }}
+                            transition={{ duration: 0.5, delay: 0.3 }}
+                            className="text-white font-bold"
+                          >
+                            ✓
+                          </motion.div>
                         </motion.div>
-                      </motion.div>
+                      </>
                     )}
                   </AnimatePresence>
                   
