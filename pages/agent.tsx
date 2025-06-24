@@ -1,10 +1,9 @@
 import Head from 'next/head';
-import Script from 'next/script';
 import Layout from '../components/Layout';
 import ElevenLabsAgent from '../components/ElevenLabsAgent';
 import RecommendedProducts from '../components/RecommendedProducts';
 import { useState, useEffect } from 'react';
-import { Crown, Sparkles, Star, Mic, Shield } from 'lucide-react';
+import { Crown, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useProductDisplayTool } from '../utils/productDisplayTool';
 
@@ -17,7 +16,7 @@ export default function Agent() {
   // Initialize product display tool
   const { 
     recommendedProducts, 
-    initializeProductTool, 
+    handleProductDisplay,
     removeProduct, 
     clearProducts 
   } = useProductDisplayTool();
@@ -28,10 +27,6 @@ export default function Agent() {
     if (envApiKey) {
       setApiKey(envApiKey);
     }
-    
-    // Initialize the product display tool
-    const cleanup = initializeProductTool();
-    return cleanup;
   }, []);
 
   return (
@@ -43,9 +38,6 @@ export default function Agent() {
           content="Chat with our AI concierge about Brolex luxury watches. Get personalized recommendations and creative excuses for being late." 
         />
       </Head>
-      
-      {/* Load the product tool handler script */}
-      <Script src="/js/productToolHandler.js" strategy="afterInteractive" />
       
       <Layout>
         {/* Hero Section */}
@@ -120,7 +112,8 @@ export default function Agent() {
             >
               <ElevenLabsAgent 
                 agentId={AGENT_ID} 
-                apiKey={apiKey} 
+                apiKey={apiKey}
+                onShowProductCard={handleProductDisplay}
               />
             </motion.div>
             

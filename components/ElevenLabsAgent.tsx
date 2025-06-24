@@ -12,9 +12,10 @@ import { Mic, MicOff, Loader2, AlertCircle, Crown, Sparkles, Key, Eye, EyeOff, P
 interface ElevenLabsAgentProps {
   agentId: string;
   apiKey: string;
+  onShowProductCard?: (parameters: { productId: number | string; name?: string; price?: string; image?: string; description?: string }) => void;
 }
 
-const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envApiKey }) => {
+const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envApiKey, onShowProductCard }) => {
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   const [inputApiKey, setInputApiKey] = useState('');
   const [showApiKey, setShowApiKey] = useState(false);
@@ -51,6 +52,24 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
         setError(`Failed to connect to the AI agent: ${errorMessage}. Please check your API key and try again.`);
       }
     },
+    clientTools: {
+      showProductCard: async (parameters: { productId: number | string; name?: string; price?: string; image?: string; description?: string }) => {
+        console.log('showProductCard called with parameters:', parameters);
+        
+        if (onShowProductCard) {
+          onShowProductCard(parameters);
+          return {
+            success: true,
+            message: `Product "${parameters.name || 'product'}" has been displayed`
+          };
+        }
+        
+        return {
+          success: false,
+          error: 'Product display handler not available'
+        };
+      }
+    }
   });
 
   useEffect(() => {

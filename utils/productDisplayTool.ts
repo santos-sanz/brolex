@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import productsJson from '../data/products.json';
 
 // Type definitions
@@ -22,33 +22,6 @@ export function useProductDisplayTool() {
   const [recommendedProducts, setRecommendedProducts] = useState<RecommendedProduct[]>([]);
   const watches: Watch[] = productsJson as Watch[];
 
-  // Function to add a tool listener to the ElevenLabs widget
-  const initializeProductTool = () => {
-    if (typeof window !== 'undefined') {
-      // Wait for the ElevenLabs widget to load
-      const checkForWidget = setInterval(() => {
-        const widget = document.querySelector('elevenlabs-convai');
-        if (widget) {
-          clearInterval(checkForWidget);
-          
-          // Add event listener for the custom tool events from ElevenLabs
-          window.addEventListener('elivedemo:tool-request', (event: any) => {
-            if (event.detail?.tools?.showProductCard) {
-              handleProductDisplay(event.detail.tools.showProductCard);
-            }
-          });
-          
-          console.log('Product display tool initialized');
-        }
-      }, 1000);
-      
-      return () => {
-        clearInterval(checkForWidget);
-        window.removeEventListener('elivedemo:tool-request', () => {});
-      };
-    }
-  };
-
   // Handler for product display tool events
   const handleProductDisplay = (productData: { productId: number | string }) => {
     const productId = typeof productData.productId === 'string' 
@@ -60,20 +33,22 @@ export function useProductDisplayTool() {
     
     if (productDetails) {
       // If the product is already in the list, don't add it again
-      if (!recommendedProducts.some(p => p.productId === productId)) {
-        setRecommendedProducts(prev => [
-          ...prev, 
-          { productId, displayData: productDetails }
-        ]);
-      }
+      setRecommendedProducts(prev => {
+        if (!prev.some(p => p.productId === productId)) {
+          return [...prev, { productId, displayData: productDetails }];
+        }
+        return prev;
+      });
       console.log('Product displayed:', productDetails.name);
     } else {
       console.warn(`Product with ID ${productId} not found`);
       // Still add it to the list but with null data
-      setRecommendedProducts(prev => [
-        ...prev, 
-        { productId, displayData: null }
-      ]);
+      setRecommendedProducts(prev => {
+        if (!prev.some(p => p.productId === productId)) {
+          return [...prev, { productId, displayData: null }];
+        }
+        return prev;
+      });
     }
   };
 
@@ -89,7 +64,7 @@ export function useProductDisplayTool() {
 
   return {
     recommendedProducts,
-    initializeProductTool,
+    handleProductDisplay,
     removeProduct,
     clearProducts
   };
