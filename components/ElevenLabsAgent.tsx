@@ -23,6 +23,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
   const [error, setError] = useState<string | null>(null);
   const [conversationStarted, setConversationStarted] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [toolCallCount, setToolCallCount] = useState(0);
 
   const conversation = useConversation({
     onConnect: () => {
@@ -53,21 +54,90 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
       }
     },
     clientTools: {
-      showProductCard: async (parameters: { productId: number | string; name?: string; price?: string; image?: string; description?: string }) => {
-        console.log('showProductCard called with parameters:', parameters);
+      showProductCard: async (parameters: any) => {
+        console.log('🎯 showProductCard called with parameters:', parameters);
+        console.log('🎯 Parameter types:', typeof parameters, Object.keys(parameters || {}));
         
-        if (onShowProductCard) {
-          onShowProductCard(parameters);
+        setToolCallCount(prev => prev + 1);
+        
+        try {
+          // Handle different parameter formats that ElevenLabs might send
+          let productId: number;
+          
+          // Try different possible parameter names and formats
+          if (parameters?.productId !== undefined) {
+            productId = typeof parameters.productId === 'string' 
+              ? parseInt(parameters.productId, 10) 
+              : parameters.productId;
+          } else if (parameters?.product_id !== undefined) {
+            productId = typeof parameters.product_id === 'string' 
+              ? parseInt(parameters.product_id, 10) 
+              : parameters.product_id;
+          } else if (parameters?.id !== undefined) {
+            productId = typeof parameters.id === 'string' 
+              ? parseInt(parameters.id, 10) 
+              : parameters.id;
+          } else if (typeof parameters === 'string') {
+            // Sometimes the entire parameter might be just a string ID
+            productId = parseInt(parameters, 10);
+          } else if (typeof parameters === 'number') {
+            // Or just a number
+            productId = parameters;
+          } else {
+            console.error('❌ No valid product ID found in parameters:', parameters);
+            
+            // Try to extract any number from the parameters
+            const paramStr = JSON.stringify(parameters);
+            const numberMatch = paramStr.match(/\d+/);
+            if (numberMatch) {
+              productId = parseInt(numberMatch[0], 10);
+              console.log('🎯 Extracted number from parameters:', productId);
+            } else {
+              return {
+                success: false,
+                error: 'No valid product ID provided. Expected productId, product_id, or id parameter.'
+              };
+            }
+          }
+          
+          console.log('🎯 Extracted product ID:', productId);
+          
+          if (isNaN(productId)) {
+            console.error('❌ Invalid product ID:', productId);
+            return {
+              success: false,
+              error: 'Invalid product ID format'
+            };
+          }
+          
+          if (onShowProductCard) {
+            console.log('🎯 Calling onShowProductCard with productId:', productId);
+            onShowProductCard({ 
+              productId,
+              name: parameters?.name,
+              price: parameters?.price,
+              image: parameters?.image,
+              description: parameters?.description
+            });
+            
+            return {
+              success: true,
+              message: `Product ${productId} has been displayed successfully`
+            };
+          } else {
+            console.error('❌ onShowProductCard handler not provided');
+            return {
+              success: false,
+              error: 'Product display handler not available'
+            };
+          }
+        } catch (error) {
+          console.error('❌ Error in showProductCard:', error);
           return {
-            success: true,
-            message: `Product "${parameters.name || 'product'}" has been displayed`
+            success: false,
+            error: `Failed to display product: ${error}`
           };
         }
-        
-        return {
-          success: false,
-          error: 'Product display handler not available'
-        };
       }
     }
   });
@@ -336,6 +406,12 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
               } ${conversation.status === 'connecting' ? 'animate-pulse' : ''}`}></div>
               <span className="text-sm capitalize">{conversation.status}</span>
             </div>
+            
+            {toolCallCount > 0 && (
+              <div className="bg-white/20 rounded-lg px-3 py-1">
+                <span className="text-xs">Tools: {toolCallCount}</span>
+              </div>
+            )}
             
             <button
               onClick={resetApiKey}
