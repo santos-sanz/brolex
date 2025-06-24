@@ -175,7 +175,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
         
         try {
           let productId: number;
-          let quantity: number = 1;
+          let quantity: number = 1; // Default to 1 if not specified
           
           // Extract product_id with multiple fallback formats
           if (parameters?.product_id !== undefined) {
@@ -204,7 +204,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
             }
           }
           
-          // Extract quantity (optional)
+          // Extract quantity (optional, defaults to 1)
           if (parameters?.quantity !== undefined) {
             quantity = typeof parameters.quantity === 'string' 
               ? parseInt(parameters.quantity, 10) 
@@ -232,9 +232,9 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
           
           console.log('✅ Found product:', product.name);
           
-          // Trigger add to cart animation
+          // Trigger add to cart animation on the product card
           setAddToCartAnimation(true);
-          setTimeout(() => setAddToCartAnimation(false), 1500);
+          setTimeout(() => setAddToCartAnimation(false), 2000);
           
           // Add to cart multiple times if quantity > 1
           for (let i = 0; i < quantity; i++) {
@@ -260,7 +260,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
           // Auto-open cart after a short delay
           setTimeout(() => {
             openCart();
-          }, 800);
+          }, 1000);
           
           return {
             success: true,
@@ -350,7 +350,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
   const handleAddToCart = () => {
     if (currentProduct?.displayData) {
       setAddToCartAnimation(true);
-      setTimeout(() => setAddToCartAnimation(false), 1500);
+      setTimeout(() => setAddToCartAnimation(false), 2000);
       
       addItem(currentProduct.displayData);
       toast.success(`Added ${currentProduct.displayData.name} to your collection of dreams!`, {
@@ -368,7 +368,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
       // Auto-open cart after a short delay
       setTimeout(() => {
         openCart();
-      }, 800);
+      }, 1000);
     }
   };
 
@@ -780,7 +780,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                           initial={{ scale: 0, opacity: 0.8 }}
                           animate={{ scale: 4, opacity: 0 }}
                           exit={{ scale: 0, opacity: 0 }}
-                          transition={{ duration: 0.6, ease: "easeOut" }}
+                          transition={{ duration: 0.8, ease: "easeOut" }}
                           className="absolute inset-0 bg-green-400 rounded-lg"
                         />
                         
@@ -789,18 +789,42 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                           initial={{ scale: 0, opacity: 0, rotate: -180 }}
                           animate={{ scale: 1, opacity: 1, rotate: 0 }}
                           exit={{ scale: 0, opacity: 0 }}
-                          transition={{ duration: 0.4, delay: 0.2 }}
+                          transition={{ duration: 0.5, delay: 0.3 }}
                           className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center rounded-lg"
                         >
                           <motion.div
                             initial={{ scale: 0 }}
-                            animate={{ scale: [0, 1.2, 1] }}
-                            transition={{ duration: 0.5, delay: 0.3 }}
-                            className="text-white font-bold"
+                            animate={{ scale: [0, 1.3, 1] }}
+                            transition={{ duration: 0.6, delay: 0.4 }}
+                            className="text-white font-bold text-lg"
                           >
                             ✓
                           </motion.div>
                         </motion.div>
+                        
+                        {/* Sparkle effects */}
+                        {[...Array(6)].map((_, i) => (
+                          <motion.div
+                            key={i}
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ 
+                              scale: [0, 1, 0], 
+                              opacity: [0, 1, 0],
+                              x: [0, (Math.random() - 0.5) * 100],
+                              y: [0, (Math.random() - 0.5) * 100]
+                            }}
+                            transition={{ 
+                              duration: 1.2, 
+                              delay: 0.5 + i * 0.1,
+                              ease: "easeOut"
+                            }}
+                            className="absolute w-2 h-2 bg-yellow-300 rounded-full"
+                            style={{
+                              left: `${20 + Math.random() * 60}%`,
+                              top: `${20 + Math.random() * 60}%`
+                            }}
+                          />
+                        ))}
                       </>
                     )}
                   </AnimatePresence>
