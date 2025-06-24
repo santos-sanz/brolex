@@ -1,29 +1,38 @@
 'use client';
 
 import { useConversation } from '@elevenlabs/react';
+import { useCallback, useState, useEffect } from 'react';
+import { Mic, Loader2, AlertCircle, Crown, Sparkles, Key, Eye, EyeOff, Play, Square, X, ShoppingCart } from 'lucide-react';
+import Image from 'next/image';
+import { motion, AnimatePresence } from 'framer-motion';
+import type { RecommendedProduct } from '../utils/productDisplayTool';
 
 interface ElevenLabsError extends Error {
   code?: number;
   message: string;
 }
-import { useCallback, useState, useEffect } from 'react';
-import { Mic, MicOff, Loader2, AlertCircle, Crown, Sparkles, Key, Eye, EyeOff, Play, Square, RefreshCw } from 'lucide-react';
 
 interface ElevenLabsAgentProps {
   agentId: string;
   apiKey: string;
   onShowProductCard?: (parameters: { productId: number | string; name?: string; price?: string; image?: string; description?: string }) => void;
+  currentProduct?: RecommendedProduct | null;
+  onRemoveProduct?: (productId: number) => void;
 }
 
-const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envApiKey, onShowProductCard }) => {
+const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ 
+  agentId, 
+  apiKey: envApiKey, 
+  onShowProductCard,
+  currentProduct,
+  onRemoveProduct
+}) => {
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   const [inputApiKey, setInputApiKey] = useState('');
   const [showApiKey, setShowApiKey] = useState(false);
   const [currentApiKey, setCurrentApiKey] = useState(envApiKey);
   const [error, setError] = useState<string | null>(null);
   const [conversationStarted, setConversationStarted] = useState(false);
-  const [isRetrying, setIsRetrying] = useState(false);
-  const [toolCallCount, setToolCallCount] = useState(0);
 
   const conversation = useConversation({
     onConnect: () => {
@@ -39,32 +48,16 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
     },
     onError: (error: unknown) => {
       console.error('ElevenLabs agent error:', error);
-      
-      // Handle specific error codes
       const elevenLabsError = error as ElevenLabsError;
-      if (elevenLabsError?.code !== undefined) {
-        if (elevenLabsError.code === 3000) {
-          setError('Authorization failed. Your API key is invalid, expired, or lacks permissions. Please check your ElevenLabs account and try a new API key.');
-        } else {
-          setError(`Connection failed (Error ${elevenLabsError.code}). Please check your API key and try again.`);
-        }
-      } else {
-        const errorMessage = elevenLabsError?.message || 'Unknown error';
-        setError(`Failed to connect to the AI agent: ${errorMessage}. Please check your API key and try again.`);
-      }
+      setError(`Connection failed. Please check your API key and try again.`);
     },
     clientTools: {
       showProductCard: async (parameters: any) => {
         console.log('🎯 showProductCard called with parameters:', parameters);
-        console.log('🎯 Parameter types:', typeof parameters, Object.keys(parameters || {}));
-        
-        setToolCallCount(prev => prev + 1);
         
         try {
-          // Handle different parameter formats that ElevenLabs might send
           let productId: number;
           
-          // Try different possible parameter names and formats
           if (parameters?.productId !== undefined) {
             productId = typeof parameters.productId === 'string' 
               ? parseInt(parameters.productId, 10) 
@@ -78,40 +71,24 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
               ? parseInt(parameters.id, 10) 
               : parameters.id;
           } else if (typeof parameters === 'string') {
-            // Sometimes the entire parameter might be just a string ID
             productId = parseInt(parameters, 10);
           } else if (typeof parameters === 'number') {
-            // Or just a number
             productId = parameters;
           } else {
-            console.error('❌ No valid product ID found in parameters:', parameters);
-            
-            // Try to extract any number from the parameters
             const paramStr = JSON.stringify(parameters);
             const numberMatch = paramStr.match(/\d+/);
             if (numberMatch) {
               productId = parseInt(numberMatch[0], 10);
-              console.log('🎯 Extracted number from parameters:', productId);
             } else {
-              return {
-                success: false,
-                error: 'No valid product ID provided. Expected productId, product_id, or id parameter.'
-              };
+              return { success: false, error: 'No valid product ID provided.' };
             }
           }
           
-          console.log('🎯 Extracted product ID:', productId);
-          
           if (isNaN(productId)) {
-            console.error('❌ Invalid product ID:', productId);
-            return {
-              success: false,
-              error: 'Invalid product ID format'
-            };
+            return { success: false, error: 'Invalid product ID format' };
           }
           
           if (onShowProductCard) {
-            console.log('🎯 Calling onShowProductCard with productId:', productId);
             onShowProductCard({ 
               productId,
               name: parameters?.name,
@@ -124,26 +101,18 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
               success: true,
               message: `Product ${productId} has been displayed successfully`
             };
-          } else {
-            console.error('❌ onShowProductCard handler not provided');
-            return {
-              success: false,
-              error: 'Product display handler not available'
-            };
           }
+          
+          return { success: false, error: 'Product display handler not available' };
         } catch (error) {
           console.error('❌ Error in showProductCard:', error);
-          return {
-            success: false,
-            error: `Failed to display product: ${error}`
-          };
+          return { success: false, error: `Failed to display product: ${error}` };
         }
       }
     }
   });
 
   useEffect(() => {
-    // Check if we have an API key from environment or user input
     if (envApiKey && envApiKey.startsWith('sk_')) {
       setCurrentApiKey(envApiKey);
       setShowApiKeyInput(false);
@@ -171,17 +140,8 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
 
     try {
       setError(null);
-      setIsRetrying(false);
-      
-      // Request microphone permission
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      // Log the API key (first few characters for security)
-      console.log('Using API key:', currentApiKey ? `${currentApiKey.substring(0, 5)}...` : 'No API key provided');
-      
-      // For authorized conversations, you need to generate a signed URL from your server
-      // For now, we'll try with just the agentId (for public agents)
-      // In production, you should generate a signed URL using your API key on the server
       await conversation.startSession({
         agentId: agentId,
       });
@@ -189,13 +149,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
       setConversationStarted(true);
     } catch (error) {
       console.error('Failed to start conversation:', error);
-      
-      // Handle specific authorization errors
-      if (error && typeof error === 'object' && 'code' in error && error.code === 3000) {
-        setError('Authorization failed. This agent may require a signed URL for access. Please ensure your agent is configured as public or implement server-side signed URL generation.');
-      } else {
-        setError('Failed to start conversation. Please check your microphone permissions and ensure the agent is accessible.');
-      }
+      setError('Failed to start conversation. Please check your microphone permissions and ensure the agent is accessible.');
     }
   }, [conversation, agentId, currentApiKey]);
 
@@ -210,25 +164,26 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
     setShowApiKeyInput(true);
     setConversationStarted(false);
     setError(null);
-    setIsRetrying(false);
     if (conversation.status === 'connected') {
       conversation.endSession();
     }
   };
 
-  const retryConnection = async () => {
-    setIsRetrying(true);
-    setError(null);
-    await startConversation();
-    setIsRetrying(false);
+  const formatPrice = (price: number) => {
+    return price.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
   };
 
   // API Key Input Screen
   if (showApiKeyInput) {
     return (
-      <div className="h-full min-h-[600px] bg-gradient-to-br from-slate-50 to-white rounded-2xl border border-slate-200 overflow-hidden">
+      <div className="h-full min-h-[600px] flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 p-8 text-white">
+        <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 p-6 text-white">
           <div className="flex items-center space-x-4">
             <div className="relative">
               <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
@@ -244,7 +199,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
         </div>
 
         {/* API Key Input Form */}
-        <div className="flex-1 p-8 flex flex-col items-center justify-center">
+        <div className="flex-1 p-8 flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-white">
           <div className="w-full max-w-md space-y-8">
             <div className="text-center space-y-4">
               <div className="relative">
@@ -255,9 +210,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
               </div>
               
               <div>
-                <h4 className="text-2xl font-bold text-slate-900 mb-2">
-                  Ready to Chat?
-                </h4>
+                <h4 className="text-2xl font-bold text-slate-900 mb-2">Ready to Chat?</h4>
                 <p className="text-slate-600 text-sm">
                   Connect your ElevenLabs API key to start a voice conversation with our luxury timepiece consultant.
                 </p>
@@ -316,11 +269,6 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
                 <li>Find and copy your API key (starts with "sk_")</li>
                 <li>Paste it above to start chatting</li>
               </ol>
-              <div className="bg-amber-50 rounded-lg p-3 border border-amber-200">
-                <p className="text-xs text-amber-700">
-                  🔒 Your API key is only used for this session and is never stored.
-                </p>
-              </div>
             </div>
           </div>
         </div>
@@ -330,44 +278,20 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
 
   if (error && !conversationStarted) {
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[600px] bg-gradient-to-br from-red-50 to-white rounded-2xl border border-red-200">
+      <div className="flex flex-col items-center justify-center h-full min-h-[600px] bg-gradient-to-br from-red-50 to-white">
         <div className="text-center max-w-md space-y-6">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
             <AlertCircle className="w-8 h-8 text-red-500" />
           </div>
           <div>
-            <h3 className="text-xl font-semibold text-slate-900 mb-2">Authorization Failed</h3>
-            <p className="text-slate-600 text-sm mb-4">{error}</p>
-            
-            {/* Troubleshooting tips for authorization errors */}
-            <div className="bg-amber-50 rounded-lg p-4 border border-amber-200 text-left">
-              <h4 className="text-amber-800 font-medium text-sm mb-2">Troubleshooting Tips:</h4>
-              <ul className="text-xs text-amber-700 space-y-1">
-                <li>• Check that your API key is active in your ElevenLabs account</li>
-                <li>• Verify you have sufficient credits in your account</li>
-                <li>• Try generating a new API key from your dashboard</li>
-                <li>• Ensure your account has access to Agent Mode</li>
-                <li>• Make sure your agent is configured as public or implement signed URL generation</li>
-              </ul>
-            </div>
+            <h3 className="text-xl font-semibold text-slate-900 mb-2">Connection Failed</h3>
+            <p className="text-slate-600">{error}</p>
           </div>
           
           <div className="flex space-x-3">
             <button
-              onClick={retryConnection}
-              disabled={isRetrying}
-              className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-xl transition-colors font-medium disabled:opacity-50 flex items-center space-x-2"
-            >
-              {isRetrying ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <RefreshCw className="w-4 h-4" />
-              )}
-              <span>{isRetrying ? 'Retrying...' : 'Retry'}</span>
-            </button>
-            <button
               onClick={resetApiKey}
-              className="bg-slate-600 hover:bg-slate-700 text-white px-6 py-3 rounded-xl transition-colors font-medium"
+              className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-xl transition-colors font-medium"
             >
               Try Different API Key
             </button>
@@ -378,7 +302,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
   }
 
   return (
-    <div className="h-full min-h-[600px] bg-gradient-to-br from-slate-50 to-white rounded-2xl border border-slate-200 overflow-hidden">
+    <div className="h-full min-h-[600px] flex flex-col">
       {/* Header */}
       <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 p-6 text-white">
         <div className="flex items-center justify-between">
@@ -407,12 +331,6 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
               <span className="text-sm capitalize">{conversation.status}</span>
             </div>
             
-            {toolCallCount > 0 && (
-              <div className="bg-white/20 rounded-lg px-3 py-1">
-                <span className="text-xs">Tools: {toolCallCount}</span>
-              </div>
-            )}
-            
             <button
               onClick={resetApiKey}
               className="p-2 hover:bg-white/20 rounded-lg transition-colors"
@@ -424,132 +342,205 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 p-8 flex flex-col items-center justify-center text-center">
-        {conversation.status === 'connecting' && (
-          <div className="space-y-6">
-            <div className="relative">
-              <div className="w-20 h-20 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl flex items-center justify-center mx-auto shadow-xl">
-                <Crown className="w-10 h-10 text-white animate-pulse" />
+      {/* Main Content Area */}
+      <div className="flex-1 flex bg-gradient-to-br from-slate-50 to-white">
+        {/* Left Side - Agent Interface */}
+        <div className="flex-1 flex flex-col items-center justify-center p-8">
+          {conversation.status === 'connecting' && (
+            <div className="space-y-6 text-center">
+              <div className="relative">
+                <div className="w-32 h-32 bg-gradient-to-br from-amber-500 to-amber-600 rounded-full flex items-center justify-center mx-auto shadow-2xl">
+                  <Crown className="w-16 h-16 text-white animate-pulse" />
+                </div>
+                <div className="absolute inset-0 bg-amber-500 opacity-20 blur-2xl rounded-full animate-pulse"></div>
               </div>
-              <div className="absolute inset-0 bg-amber-500 opacity-20 blur-2xl rounded-full animate-pulse"></div>
+              <Loader2 className="w-8 h-8 text-amber-600 animate-spin mx-auto" />
+              <p className="text-slate-700 font-medium">Connecting to your luxury AI concierge...</p>
             </div>
-            <Loader2 className="w-8 h-8 text-amber-600 animate-spin mx-auto" />
-            <p className="text-slate-700 font-medium">Connecting to your luxury AI concierge...</p>
-          </div>
-        )}
+          )}
 
-        {conversation.status === 'disconnected' && !conversationStarted && (
-          <div className="space-y-8 max-w-lg">
-            <div className="relative">
-              <div className="w-24 h-24 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl flex items-center justify-center mb-6 mx-auto shadow-2xl">
-                <Mic className="w-12 h-12 text-white" />
+          {conversation.status === 'disconnected' && !conversationStarted && (
+            <div className="space-y-8 max-w-lg text-center">
+              {/* ElevenLabs-style circular animation */}
+              <div className="relative w-48 h-48 mx-auto">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 animate-spin" 
+                     style={{ 
+                       background: 'conic-gradient(from 0deg, #f59e0b, #d97706, #92400e, #f59e0b)',
+                       animationDuration: '3s'
+                     }}>
+                </div>
+                <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
+                  <Mic className="w-16 h-16 text-amber-600" />
+                </div>
               </div>
-              <div className="absolute inset-0 bg-amber-500 opacity-20 blur-2xl rounded-full"></div>
-            </div>
-            
-            <div className="space-y-4">
-              <h4 className="text-2xl font-bold text-slate-900">
-                Welcome to Brolex Concierge
-              </h4>
-              <p className="text-slate-600">
-                Your personal luxury timepiece consultant is ready to help you find the perfect watch that almost tells time.
-              </p>
               
-              <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
-                <h5 className="text-amber-600 font-semibold mb-3 flex items-center space-x-2">
-                  <Sparkles className="w-4 h-4" />
-                  <span>Ask me about</span>
-                </h5>
-                <ul className="text-sm text-slate-600 space-y-2 text-left">
-                  <li className="flex items-center space-x-2">
-                    <div className="w-1.5 h-1.5 bg-amber-500 rounded-full"></div>
-                    <span>Watch recommendations for your lifestyle</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <div className="w-1.5 h-1.5 bg-amber-500 rounded-full"></div>
-                    <span>Luxury timepiece "features"</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <div className="w-1.5 h-1.5 bg-amber-500 rounded-full"></div>
-                    <span>Creative excuses for being late</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <div className="w-1.5 h-1.5 bg-amber-500 rounded-full"></div>
-                    <span>Our questionable warranty policies</span>
-                  </li>
-                </ul>
+              <div className="space-y-4">
+                <h4 className="text-2xl font-bold text-slate-900">Welcome to Brolex Concierge</h4>
+                <p className="text-slate-600">
+                  Your personal luxury timepiece consultant is ready to help you find the perfect watch that almost tells time.
+                </p>
               </div>
-            </div>
-            
-            <button
-              onClick={startConversation}
-              className="bg-gradient-to-r from-amber-600 to-amber-500 text-white font-semibold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 flex items-center space-x-3 mx-auto"
-            >
-              <Play className="w-5 h-5" />
-              <span>Start Voice Conversation</span>
-            </button>
-          </div>
-        )}
-
-        {conversation.status === 'connected' && (
-          <div className="space-y-8 w-full max-w-md">
-            <div className="relative">
-              <div className={`w-32 h-32 rounded-2xl flex items-center justify-center mx-auto shadow-2xl transition-all duration-500 ${
-                conversation.isSpeaking 
-                  ? 'bg-gradient-to-br from-amber-500 to-amber-600' 
-                  : 'bg-gradient-to-br from-green-500 to-emerald-600'
-              }`}>
-                {conversation.isSpeaking ? (
-                  <div className="flex space-x-1">
-                    {[...Array(5)].map((_, i) => (
-                      <div 
-                        key={i}
-                        className="w-2 bg-white rounded-full animate-pulse"
-                        style={{ 
-                          height: `${20 + Math.sin(Date.now() / 200 + i) * 15}px`,
-                          animationDelay: `${i * 100}ms`
-                        }}
-                      ></div>
-                    ))}
-                  </div>
-                ) : (
-                  <Mic className="w-16 h-16 text-white" />
-                )}
-              </div>
-              <div className="absolute inset-0 bg-amber-500 opacity-20 blur-2xl rounded-full"></div>
-            </div>
-            
-            <div className="space-y-3">
-              <h4 className="text-xl font-bold text-slate-900">
-                {conversation.isSpeaking ? 'AI Speaking...' : 'Listening...'}
-              </h4>
-              <p className="text-slate-600 text-sm">
-                {conversation.isSpeaking 
-                  ? 'The AI concierge is providing luxury advice'
-                  : 'Speak naturally about your timepiece needs'
-                }
-              </p>
-            </div>
-            
-            <div className="flex justify-center">
+              
               <button
-                onClick={stopConversation}
-                disabled={conversation.status !== 'connected'}
-                className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 font-medium"
+                onClick={startConversation}
+                className="bg-gradient-to-r from-amber-600 to-amber-500 text-white font-semibold py-4 px-8 rounded-full shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 flex items-center space-x-3 mx-auto"
               >
-                <Square className="w-5 h-5" />
-                <span>End Conversation</span>
+                <Play className="w-5 h-5" />
+                <span>Talk to interrupt</span>
               </button>
             </div>
-          </div>
-        )}
+          )}
+
+          {conversation.status === 'connected' && (
+            <div className="space-y-8 w-full max-w-md text-center">
+              {/* ElevenLabs-style listening animation */}
+              <div className="relative w-48 h-48 mx-auto">
+                <div className={`absolute inset-0 rounded-full transition-all duration-500 ${
+                  conversation.isSpeaking 
+                    ? 'bg-gradient-to-br from-amber-500 to-amber-600' 
+                    : 'bg-gradient-to-br from-green-500 to-emerald-600'
+                }`} style={{ 
+                  background: conversation.isSpeaking 
+                    ? 'conic-gradient(from 0deg, #f59e0b, #d97706, #92400e, #f59e0b)'
+                    : 'conic-gradient(from 0deg, #10b981, #059669, #047857, #10b981)',
+                  animation: conversation.isSpeaking ? 'spin 2s linear infinite' : 'none'
+                }}>
+                </div>
+                <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
+                  {conversation.isSpeaking ? (
+                    <div className="flex space-x-1">
+                      {[...Array(5)].map((_, i) => (
+                        <div 
+                          key={i}
+                          className="w-2 bg-amber-600 rounded-full animate-pulse"
+                          style={{ 
+                            height: `${20 + Math.sin(Date.now() / 200 + i) * 15}px`,
+                            animationDelay: `${i * 100}ms`
+                          }}
+                        ></div>
+                      ))}
+                    </div>
+                  ) : (
+                    <Mic className="w-16 h-16 text-green-600" />
+                  )}
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <h4 className="text-xl font-bold text-slate-900">
+                  {conversation.isSpeaking ? 'AI Speaking...' : 'Listening...'}
+                </h4>
+                <p className="text-slate-600 text-sm">
+                  {conversation.isSpeaking 
+                    ? 'The AI concierge is providing luxury advice'
+                    : 'Speak naturally about your timepiece needs'
+                  }
+                </p>
+              </div>
+              
+              <div className="flex justify-center">
+                <button
+                  onClick={stopConversation}
+                  disabled={conversation.status !== 'connected'}
+                  className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 font-medium"
+                >
+                  <Square className="w-5 h-5" />
+                  <span>End Conversation</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right Side - Product Display */}
+        <AnimatePresence>
+          {currentProduct && currentProduct.displayData && (
+            <motion.div
+              initial={{ x: '100%', opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="w-80 bg-white border-l border-slate-200 flex flex-col"
+            >
+              {/* Product Header */}
+              <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-4 text-white">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Crown className="w-5 h-5 text-amber-400" />
+                    <span className="font-semibold">Recommended</span>
+                  </div>
+                  <button
+                    onClick={() => onRemoveProduct?.(currentProduct.productId)}
+                    className="p-1 hover:bg-white/20 rounded-full transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Product Content */}
+              <div className="flex-1 p-6 space-y-6">
+                {/* Product Image */}
+                <div className="relative aspect-square rounded-xl overflow-hidden bg-slate-100">
+                  <Image
+                    src={currentProduct.displayData.image}
+                    alt={currentProduct.displayData.name}
+                    fill
+                    className="object-cover"
+                    sizes="320px"
+                  />
+                </div>
+
+                {/* Product Info */}
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900 font-playfair">
+                      {currentProduct.displayData.name}
+                    </h3>
+                    <p className="text-amber-600 text-sm italic mt-1">
+                      {currentProduct.displayData.tagline}
+                    </p>
+                  </div>
+
+                  <div className="text-2xl font-bold text-slate-900 font-playfair">
+                    {formatPrice(currentProduct.displayData.price)}
+                  </div>
+
+                  <p className="text-slate-600 text-sm leading-relaxed">
+                    {currentProduct.displayData.description}
+                  </p>
+
+                  {/* Features */}
+                  {currentProduct.displayData.features && (
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-slate-900 text-sm">Features:</h4>
+                      <ul className="space-y-1">
+                        {currentProduct.displayData.features.map((feature, index) => (
+                          <li key={index} className="text-xs text-slate-600 flex items-start space-x-2">
+                            <div className="w-1 h-1 bg-amber-500 rounded-full mt-2 flex-shrink-0"></div>
+                            <span>{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                {/* Add to Cart Button */}
+                <button className="w-full bg-gradient-to-r from-slate-900 to-slate-800 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center space-x-2">
+                  <ShoppingCart className="w-5 h-5" />
+                  <span>Add to Collection</span>
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Footer */}
       <div className="border-t border-slate-200 bg-slate-50 p-4 text-center">
         <p className="text-xs text-slate-500">
-          Powered by ElevenLabs • Agent ID: {agentId} • Luxury advice not guaranteed to be accurate
+          Powered by ElevenLabs • Luxury advice not guaranteed to be accurate
         </p>
       </div>
     </div>

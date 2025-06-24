@@ -22,7 +22,7 @@ export function useProductDisplayTool() {
   const [recommendedProducts, setRecommendedProducts] = useState<RecommendedProduct[]>([]);
   const watches: Watch[] = productsJson as Watch[];
 
-  // Handler for product display tool events
+  // Handler for product display tool events - now shows only one product at a time
   const handleProductDisplay = (productData: { productId: number | string; name?: string; price?: string; image?: string; description?: string }) => {
     console.log('🎯 handleProductDisplay called with:', productData);
     
@@ -39,33 +39,20 @@ export function useProductDisplayTool() {
     if (productDetails) {
       console.log('✅ Product found:', productDetails.name);
       
-      // If the product is already in the list, don't add it again
-      setRecommendedProducts(prev => {
-        if (!prev.some(p => p.productId === productId)) {
-          console.log('✅ Adding product to display list');
-          return [...prev, { productId, displayData: productDetails }];
-        } else {
-          console.log('ℹ️ Product already in display list');
-          return prev;
-        }
-      });
+      // Replace the current product (show only one at a time)
+      setRecommendedProducts([{ productId, displayData: productDetails }]);
     } else {
       console.warn(`❌ Product with ID ${productId} not found in data`);
       console.log('Available product IDs:', watches.map(w => w.id));
       
-      // Still add it to the list but with null data to show the error
-      setRecommendedProducts(prev => {
-        if (!prev.some(p => p.productId === productId)) {
-          return [...prev, { productId, displayData: null }];
-        }
-        return prev;
-      });
+      // Still add it to show the error
+      setRecommendedProducts([{ productId, displayData: null }]);
     }
   };
 
   // Remove a product from the display
   const removeProduct = (productId: number) => {
-    setRecommendedProducts(prev => prev.filter(p => p.productId !== productId));
+    setRecommendedProducts([]);
   };
 
   // Clear all displayed products
