@@ -24,19 +24,39 @@ function initializeProductTool(widget) {
         }
       },
       required: ["productId"]
+    },
+    // Add a handler function that returns a Promise
+    handler: async (params) => {
+      console.log('Product tool handler called with params:', params);
+      
+      // Create and dispatch a custom event that our React hook will listen for
+      const toolEvent = new CustomEvent('elivedemo:tool-request', {
+        detail: {
+          tools: {
+            showProductCard: params
+          }
+        }
+      });
+      
+      window.dispatchEvent(toolEvent);
+      
+      // Resolve the promise with a success response
+      return { status: 'success', message: 'Product displayed successfully' };
     }
   };
 
   // Register the tool with the widget
-  if (typeof widget.registerAgentTool === 'function') {
+  if (typeof widget.registerClientTool === 'function') {
+    widget.registerClientTool(productTool);
+    console.log("Product tool registered successfully with ElevenLabs widget as client tool");
+  } else if (typeof widget.registerAgentTool === 'function') {
     widget.registerAgentTool(productTool);
-    console.log("Product tool registered successfully with ElevenLabs widget");
+    console.log("Product tool registered successfully with ElevenLabs widget as agent tool");
   } else {
-    console.warn("registerAgentTool method not found on ElevenLabs widget");
+    console.warn("No tool registration method found on ElevenLabs widget");
   }
 
-  // When the agent calls the tool, a custom event will be dispatched
-  // This event will be captured by the React component in productDisplayTool.ts
+  // Also listen for tool-call events for backwards compatibility
   widget.addEventListener('tool-call', (event) => {
     if (event.detail?.name === 'showProductCard') {
       const data = event.detail?.parameters || {};
@@ -51,7 +71,7 @@ function initializeProductTool(widget) {
       });
       
       window.dispatchEvent(toolEvent);
-      console.log('Product display tool called:', data);
+      console.log('Product display tool called via event:', data);
       
       // Return success to the agent
       return { status: 'success' };

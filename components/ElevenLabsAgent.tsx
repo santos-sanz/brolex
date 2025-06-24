@@ -1,6 +1,11 @@
 'use client';
 
 import { useConversation } from '@elevenlabs/react';
+
+interface ElevenLabsError extends Error {
+  code?: number;
+  message: string;
+}
 import { useCallback, useState, useEffect } from 'react';
 import { Mic, MicOff, Loader2, AlertCircle, Crown, Sparkles, Key, Eye, EyeOff, Play, Square, RefreshCw } from 'lucide-react';
 
@@ -30,18 +35,20 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
     onMessage: (message) => {
       console.log('Agent message:', message);
     },
-    onError: (error) => {
+    onError: (error: unknown) => {
       console.error('ElevenLabs agent error:', error);
       
       // Handle specific error codes
-      if (error && typeof error === 'object' && 'code' in error) {
-        if (error.code === 3000) {
+      const elevenLabsError = error as ElevenLabsError;
+      if (elevenLabsError?.code !== undefined) {
+        if (elevenLabsError.code === 3000) {
           setError('Authorization failed. Your API key is invalid, expired, or lacks permissions. Please check your ElevenLabs account and try a new API key.');
         } else {
-          setError(`Connection failed (Error ${error.code}). Please check your API key and try again.`);
+          setError(`Connection failed (Error ${elevenLabsError.code}). Please check your API key and try again.`);
         }
       } else {
-        setError('Failed to connect to the AI agent. Please check your API key and try again.');
+        const errorMessage = elevenLabsError?.message || 'Unknown error';
+        setError(`Failed to connect to the AI agent: ${errorMessage}. Please check your API key and try again.`);
       }
     },
   });
@@ -83,8 +90,8 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
       // Start the conversation with the correct authorization format for ElevenLabs React SDK
       await conversation.startSession({
         agentId: agentId,
-        // Use the 'apiKey' parameter instead of 'authorization'
-        apiKey: currentApiKey,
+        // Use 'authorization' with the API key as the value
+        authorization: currentApiKey,
       });
 
       setConversationStarted(true);
