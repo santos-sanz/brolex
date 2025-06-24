@@ -90,11 +90,11 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
       // Log the API key (first few characters for security)
       console.log('Using API key:', currentApiKey ? `${currentApiKey.substring(0, 5)}...` : 'No API key provided');
       
-      // Start the conversation with the correct authorization format for ElevenLabs React SDK
+      // For authorized conversations, you need to generate a signed URL from your server
+      // For now, we'll try with just the agentId (for public agents)
+      // In production, you should generate a signed URL using your API key on the server
       await conversation.startSession({
         agentId: agentId,
-        // The SDK expects the API key in Bearer token format
-        authorization: 'Bearer ' + currentApiKey,
       });
 
       setConversationStarted(true);
@@ -103,9 +103,9 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
       
       // Handle specific authorization errors
       if (error && typeof error === 'object' && 'code' in error && error.code === 3000) {
-        setError('Authorization failed. Your API key is invalid, expired, or lacks permissions. Please verify your ElevenLabs account status and try a new API key.');
+        setError('Authorization failed. This agent may require a signed URL for access. Please ensure your agent is configured as public or implement server-side signed URL generation.');
       } else {
-        setError('Failed to start conversation. Please check your microphone permissions and API key.');
+        setError('Failed to start conversation. Please check your microphone permissions and ensure the agent is accessible.');
       }
     }
   }, [conversation, agentId, currentApiKey]);
@@ -258,6 +258,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ agentId, apiKey: envA
                 <li>• Verify you have sufficient credits in your account</li>
                 <li>• Try generating a new API key from your dashboard</li>
                 <li>• Ensure your account has access to Agent Mode</li>
+                <li>• Make sure your agent is configured as public or implement signed URL generation</li>
               </ul>
             </div>
           </div>
