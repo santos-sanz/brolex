@@ -41,7 +41,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
   const [conversationStarted, setConversationStarted] = useState(false);
   const [addToCartAnimation, setAddToCartAnimation] = useState(false);
 
-  const { addItem, removeItem, updateQuantity, openCart, closeCart, state } = useCart();
+  const { addItem, addInsurance, removeItem, updateQuantity, openCart, closeCart, state } = useCart();
   const watches = productsJson;
 
   const conversation = useConversation({
@@ -526,6 +526,73 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
         } catch (error) {
           const errorMessage = `Failed to hide cart: ${error}`;
           console.error('❌ Error in hideCart:', errorMessage);
+          return errorMessage;
+        }
+      },
+
+      offerWatchInsurance: async (parameters: any): Promise<string | void> => {
+        console.log('🛡️ offerWatchInsurance called');
+        
+        try {
+          // Check if insurance is already in cart
+          const hasInsurance = state.items.some(item => item.isInsurance);
+          
+          if (hasInsurance) {
+            const message = 'You already have our Premium Protection Plan in your cart! Your luxury timepieces are well protected.';
+            console.log('ℹ️ Insurance already in cart');
+            
+            // Show toast notification
+            toast.success(
+              'Protection Plan already active! 🛡️',
+              {
+                icon: '✅',
+                duration: 3000,
+                style: {
+                  background: 'linear-gradient(135deg, #065f46 0%, #047857 100%)',
+                  color: '#f0fdf4',
+                  borderRadius: '12px',
+                  border: '1px solid #10b981',
+                  boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
+                },
+              }
+            );
+            
+            return message;
+          }
+          
+          // Add insurance to cart
+          addInsurance();
+          
+          // Show dramatic insurance toast
+          toast.success(
+            'Premium Protection Plan added! Your watches are now insured against reality! 🛡️✨',
+            {
+              icon: '🛡️',
+              duration: 5000,
+              style: {
+                background: 'linear-gradient(135deg, #065f46 0%, #047857 100%)',
+                color: '#f0fdf4',
+                borderRadius: '12px',
+                border: '1px solid #10b981',
+                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
+              },
+            }
+          );
+          
+          // Auto-open cart to show the insurance
+          setTimeout(() => {
+            openCart();
+          }, 1000);
+          
+          console.log('✅ Insurance added to cart successfully');
+          
+          const message = `Excellent choice! I've added our Premium Protection Plan ($999) to your cart. This comprehensive coverage protects your luxury timepiece investment against water damage (from tears of regret), reality checks, and provides 24/7 customer support in your dreams. Your watches are now fully protected!`;
+          
+          return message;
+          
+        } catch (error) {
+          const errorMessage = `Failed to offer insurance: ${error}`;
+          console.error('❌ Error in offerWatchInsurance:', errorMessage);
           return errorMessage;
         }
       }

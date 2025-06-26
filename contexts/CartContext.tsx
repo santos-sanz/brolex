@@ -14,6 +14,7 @@ export interface Watch {
 
 export interface CartItem extends Watch {
   quantity: number;
+  isInsurance?: boolean; // New flag for insurance items
 }
 
 interface CartState {
@@ -25,6 +26,7 @@ interface CartState {
 
 type CartAction =
   | { type: 'ADD_ITEM'; payload: Watch }
+  | { type: 'ADD_INSURANCE' }
   | { type: 'REMOVE_ITEM'; payload: number }
   | { type: 'UPDATE_QUANTITY'; payload: { id: number; quantity: number } }
   | { type: 'CLEAR_CART' }
@@ -38,6 +40,22 @@ const initialState: CartState = {
   isOpen: false,
   total: 0,
   itemCount: 0,
+};
+
+// Insurance product definition
+const INSURANCE_PRODUCT: Watch = {
+  id: 999999, // Special ID for insurance
+  name: "Brolex Premium Protection Plan",
+  tagline: "Because even fake luxury needs real protection.",
+  price: 999,
+  image: "/favicon.ico", // Using favicon as placeholder
+  description: "Comprehensive coverage for your questionable timepiece investment. Covers everything except actual timekeeping accuracy.",
+  features: [
+    "Covers water damage (from tears of regret)",
+    "Protects against reality checks",
+    "24/7 customer support (in your dreams)",
+    "Replacement guarantee (terms and conditions apply in alternate universe)"
+  ]
 };
 
 function cartReducer(state: CartState, action: CartAction): CartState {
@@ -56,6 +74,33 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         newItems = [...state.items, { ...action.payload, quantity: 1 }];
       }
       
+      const total = newItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const itemCount = newItems.reduce((sum, item) => sum + item.quantity, 0);
+      
+      return {
+        ...state,
+        items: newItems,
+        total,
+        itemCount,
+      };
+    }
+    
+    case 'ADD_INSURANCE': {
+      // Check if insurance already exists
+      const existingInsurance = state.items.find(item => item.id === INSURANCE_PRODUCT.id);
+      
+      if (existingInsurance) {
+        // Don't add duplicate insurance
+        return state;
+      }
+      
+      const insuranceItem: CartItem = {
+        ...INSURANCE_PRODUCT,
+        quantity: 1,
+        isInsurance: true
+      };
+      
+      const newItems = [...state.items, insuranceItem];
       const total = newItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
       const itemCount = newItems.reduce((sum, item) => sum + item.quantity, 0);
       
@@ -144,6 +189,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
 interface CartContextType {
   state: CartState;
   addItem: (watch: Watch) => void;
+  addInsurance: () => void;
   removeItem: (id: number) => void;
   updateQuantity: (id: number, quantity: number) => void;
   clearCart: () => void;
@@ -179,6 +225,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'ADD_ITEM', payload: watch });
   };
 
+  const addInsurance = () => {
+    dispatch({ type: 'ADD_INSURANCE' });
+  };
+
   const removeItem = (id: number) => {
     dispatch({ type: 'REMOVE_ITEM', payload: id });
   };
@@ -208,6 +258,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       value={{
         state,
         addItem,
+        addInsurance,
         removeItem,
         updateQuantity,
         clearCart,

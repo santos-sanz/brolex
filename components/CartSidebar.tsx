@@ -1,7 +1,7 @@
 'use client';
 
 import { useCart } from '../contexts/CartContext';
-import { X, Plus, Minus, Trash2, ShoppingBag, Crown, Sparkles } from 'lucide-react';
+import { X, Plus, Minus, Trash2, ShoppingBag, Crown, Sparkles, Shield } from 'lucide-react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -108,50 +108,89 @@ export default function CartSidebar() {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, x: -100 }}
                           transition={{ duration: 0.3 }}
-                          className="bg-slate-800 rounded-xl p-4 border border-slate-700 hover:border-amber-500 transition-colors duration-300"
+                          className={`rounded-xl p-4 border transition-colors duration-300 ${
+                            item.isInsurance 
+                              ? 'bg-gradient-to-r from-emerald-900 via-emerald-800 to-emerald-900 border-emerald-600 hover:border-emerald-500' 
+                              : 'bg-slate-800 border-slate-700 hover:border-amber-500'
+                          }`}
                         >
+                          {/* Insurance Badge */}
+                          {item.isInsurance && (
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center space-x-2 bg-emerald-700 px-3 py-1 rounded-full">
+                                <Shield className="w-3 h-3 text-emerald-300" />
+                                <span className="text-emerald-100 text-xs font-semibold">PROTECTION PLAN</span>
+                              </div>
+                              <div className="text-emerald-300 text-xs">
+                                ✨ AI Recommended
+                              </div>
+                            </div>
+                          )}
+                          
                           <div className="flex space-x-4">
-                            <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-slate-700">
-                              <Image
-                                src={item.image}
-                                alt={item.name}
-                                fill
-                                className="object-cover"
-                                sizes="64px"
-                              />
+                            <div className={`relative w-16 h-16 rounded-lg overflow-hidden ${
+                              item.isInsurance ? 'bg-emerald-700' : 'bg-slate-700'
+                            }`}>
+                              {item.isInsurance ? (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <Shield className="w-8 h-8 text-emerald-300" />
+                                </div>
+                              ) : (
+                                <Image
+                                  src={item.image}
+                                  alt={item.name}
+                                  fill
+                                  className="object-cover"
+                                  sizes="64px"
+                                />
+                              )}
                             </div>
                             
                             <div className="flex-1 min-w-0">
                               <h4 className="font-semibold text-white text-sm font-playfair truncate">
                                 {item.name}
                               </h4>
-                              <p className="text-slate-400 text-xs mt-1 line-clamp-2">
+                              <p className={`text-xs mt-1 line-clamp-2 ${
+                                item.isInsurance ? 'text-emerald-300' : 'text-slate-400'
+                              }`}>
                                 {item.tagline}
                               </p>
                               <div className="flex items-center justify-between mt-3">
-                                <span className="text-amber-400 font-bold text-sm">
+                                <span className={`font-bold text-sm ${
+                                  item.isInsurance ? 'text-emerald-400' : 'text-amber-400'
+                                }`}>
                                   {formatPrice(item.price)}
                                 </span>
                                 
                                 {/* Quantity Controls */}
                                 <div className="flex items-center space-x-2">
-                                  <button
-                                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                    className="w-7 h-7 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-colors duration-200"
-                                  >
-                                    <Minus className="w-3 h-3 text-white" />
-                                  </button>
+                                  {!item.isInsurance && (
+                                    <>
+                                      <button
+                                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                        className="w-7 h-7 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-colors duration-200"
+                                      >
+                                        <Minus className="w-3 h-3 text-white" />
+                                      </button>
+                                      
+                                      <span className="text-white font-medium text-sm w-8 text-center">
+                                        {item.quantity}
+                                      </span>
+                                      
+                                      <button
+                                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                        className="w-7 h-7 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-colors duration-200"
+                                      >
+                                        <Plus className="w-3 h-3 text-white" />
+                                      </button>
+                                    </>
+                                  )}
                                   
-                                  <span className="text-white font-medium text-sm w-8 text-center">
-                                    {item.quantity}
-                                  </span>
-                                  
-                                  <button
-                                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                    className="w-7 h-7 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-colors duration-200"
-                                  >
-                                    <Plus className="w-3 h-3 text-white" />
-                                  </button>
+                                  {item.isInsurance && (
+                                    <span className="text-emerald-300 font-medium text-sm px-3">
+                                      Coverage: 1 Plan
+                                    </span>
+                                  )}
                                   
                                   <button
                                     onClick={() => removeItem(item.id)}
