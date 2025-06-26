@@ -8,13 +8,15 @@ interface ThreeJSAnimationProps {
   isSpeaking?: boolean;
   isConnecting?: boolean;
   size?: number;
+  mode?: 'MR_HYDE' | 'DR_JEKYLL';
 }
 
 const ThreeJSAnimation: React.FC<ThreeJSAnimationProps> = ({ 
   isListening = false, 
   isSpeaking = false, 
   isConnecting = false,
-  size = 200 
+  size = 200,
+  mode = 'MR_HYDE'
 }) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene>();
@@ -52,13 +54,32 @@ const ThreeJSAnimation: React.FC<ThreeJSAnimationProps> = ({
     const geometry = new THREE.RingGeometry(0.3, 0.8, 64, 8);
     geometryRef.current = geometry;
 
+    // Define color schemes based on mode
+    const colorSchemes = {
+      MR_HYDE: {
+        colorA: '#f59e0b', // amber-500
+        colorB: '#d97706', // amber-600
+        colorC: '#92400e', // amber-800
+        listeningTint: new THREE.Color(0.8, 0.2, 0.2) // Red tint for Hyde
+      },
+      DR_JEKYLL: {
+        colorA: '#10b981', // emerald-500
+        colorB: '#059669', // emerald-600
+        colorC: '#065f46', // emerald-800
+        listeningTint: new THREE.Color(0.2, 0.8, 0.4) // Green tint for Jekyll
+      }
+    };
+
+    const colors = colorSchemes[mode];
+
     // Custom shader material for the animated circular gradient
     const material = new THREE.ShaderMaterial({
       uniforms: {
         time: { value: 0 },
-        colorA: { value: new THREE.Color('#f59e0b') }, // amber-500
-        colorB: { value: new THREE.Color('#d97706') }, // amber-600
-        colorC: { value: new THREE.Color('#92400e') }, // amber-800
+        colorA: { value: new THREE.Color(colors.colorA) },
+        colorB: { value: new THREE.Color(colors.colorB) },
+        colorC: { value: new THREE.Color(colors.colorC) },
+        listeningTint: { value: colors.listeningTint },
         opacity: { value: 0.9 },
         isListening: { value: isListening ? 1.0 : 0.0 },
         isSpeaking: { value: isSpeaking ? 1.0 : 0.0 },
@@ -81,6 +102,7 @@ const ThreeJSAnimation: React.FC<ThreeJSAnimationProps> = ({
         uniform vec3 colorA;
         uniform vec3 colorB;
         uniform vec3 colorC;
+        uniform vec3 listeningTint;
         uniform float opacity;
         uniform float isListening;
         uniform float isSpeaking;
@@ -129,9 +151,9 @@ const ThreeJSAnimation: React.FC<ThreeJSAnimationProps> = ({
           vec3 color2 = mix(colorB, colorC, cos(animatedAngle * 6.28 * 3.0) * 0.5 + 0.5);
           vec3 baseColor = mix(color1, color2, segmentProgress);
           
-          // Apply listening state (green tint)
+          // Apply listening state tint based on mode
           if (isListening > 0.5) {
-            baseColor = mix(baseColor, vec3(0.059, 0.725, 0.506), 0.4); // emerald-500
+            baseColor = mix(baseColor, listeningTint, 0.4);
           }
           
           // Apply pulse effect

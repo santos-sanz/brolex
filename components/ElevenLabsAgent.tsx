@@ -2,7 +2,7 @@
 
 import { useConversation } from '@elevenlabs/react';
 import { useCallback, useState, useEffect } from 'react';
-import { Mic, Loader2, AlertCircle, Crown, Sparkles, Key, Eye, EyeOff, Play, Square, X, ShoppingCart, Zap, Heart } from 'lucide-react';
+import { Mic, Loader2, AlertCircle, Crown, Sparkles, Key, Eye, EyeOff, Play, Square, X, ShoppingCart, Zap, Heart, Flame } from 'lucide-react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import ThreeJSAnimation from './ThreeJSAnimation';
@@ -32,7 +32,7 @@ const AGENTS = {
     name: 'Mr Hyde',
     title: 'Luxury Sales Demon',
     description: 'Aggressive, persuasive, and slightly unhinged',
-    icon: Zap,
+    icon: Flame,
     colors: {
       primary: 'from-red-600 via-red-500 to-red-600',
       secondary: 'from-red-900 via-red-800 to-red-900',
@@ -661,7 +661,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
     // Show agent switch toast
     const newAgent = AGENTS[newMode];
     toast.success(
-      `Switched to ${newAgent.name} mode! ${newAgent.description}`,
+      `Switched to ${newAgent.name} mode!`,
       {
         icon: newMode === 'MR_HYDE' ? '⚡' : '💚',
         duration: 3000,
@@ -781,7 +781,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                     : 'text-slate-600 hover:text-red-600'
                 }`}
               >
-                <Zap className="w-4 h-4" />
+                <Flame className="w-4 h-4" />
                 <span>Mr Hyde</span>
               </button>
               <button
@@ -933,7 +933,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                   : 'text-slate-600 hover:text-red-600'
               } ${conversation.status === 'connected' ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              <Zap className="w-4 h-4" />
+              <Flame className="w-4 h-4" />
               <span>Mr Hyde</span>
             </button>
             <button
@@ -1001,6 +1001,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                 <ThreeJSAnimation 
                   isConnecting={true}
                   size={180}
+                  mode={agentMode}
                 />
               </div>
               <Loader2 className={`w-6 h-6 ${currentAgent.colors.accent} animate-spin mx-auto`} />
@@ -1016,6 +1017,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                   isListening={false}
                   isSpeaking={false}
                   size={200}
+                  mode={agentMode}
                 />
                 
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -1045,6 +1047,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                   isSpeaking={conversation.isSpeaking}
                   isConnecting={false}
                   size={200}
+                  mode={agentMode}
                 />
                 
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
