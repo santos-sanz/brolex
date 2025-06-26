@@ -41,7 +41,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
   const [conversationStarted, setConversationStarted] = useState(false);
   const [addToCartAnimation, setAddToCartAnimation] = useState(false);
 
-  const { addItem, openCart } = useCart();
+  const { addItem, removeItem, updateQuantity, openCart, closeCart, state } = useCart();
   const watches = productsJson;
 
   const conversation = useConversation({
@@ -261,16 +261,271 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
             }
           );
           
-          // Auto-open cart after a short delay
-          setTimeout(() => {
-            openCart();
-          }, 1000);
+          // Don't auto-open cart anymore - removed this line
+          // setTimeout(() => { openCart(); }, 1000);
           
           return `Successfully added ${quantity}x ${product.name} to cart`;
           
         } catch (error) {
           const errorMessage = `Failed to add product to cart: ${error}`;
           console.error('❌ Error in addProductToCart:', errorMessage);
+          return errorMessage;
+        }
+      },
+
+      removeProductFromCart: async (parameters: any): Promise<string | void> => {
+        console.log('🗑️ removeProductFromCart called with parameters:', parameters);
+        
+        try {
+          let productId: number;
+          
+          // Extract product_id with multiple fallback formats
+          if (parameters?.product_id !== undefined) {
+            productId = typeof parameters.product_id === 'string' 
+              ? parseInt(parameters.product_id, 10) 
+              : parameters.product_id;
+          } else if (parameters?.productId !== undefined) {
+            productId = typeof parameters.productId === 'string' 
+              ? parseInt(parameters.productId, 10) 
+              : parameters.productId;
+          } else if (parameters?.id !== undefined) {
+            productId = typeof parameters.id === 'string' 
+              ? parseInt(parameters.id, 10) 
+              : parameters.id;
+          } else if (typeof parameters === 'string') {
+            productId = parseInt(parameters, 10);
+          } else if (typeof parameters === 'number') {
+            productId = parameters;
+          } else {
+            const errorMessage = 'Product ID is required for removal';
+            console.error(errorMessage);
+            return errorMessage;
+          }
+          
+          // Validate input
+          if (isNaN(productId)) {
+            const errorMessage = 'Invalid product ID format';
+            console.error(errorMessage);
+            return errorMessage;
+          }
+          
+          // Find the product in our data to get the name
+          const product = watches.find((watch: any) => watch.id === productId);
+          const productName = product ? product.name : `Product ${productId}`;
+          
+          // Check if product is in cart
+          const cartItem = state.items.find(item => item.id === productId);
+          if (!cartItem) {
+            const errorMessage = `${productName} is not in the cart`;
+            console.error(errorMessage);
+            return errorMessage;
+          }
+          
+          // Remove the product from cart
+          removeItem(productId);
+          
+          // Show success toast
+          toast.success(
+            `Removed ${productName} from your cart`,
+            {
+              icon: '🗑️',
+              duration: 3000,
+              style: {
+                background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+                color: '#f8fafc',
+                borderRadius: '12px',
+                border: '1px solid #ef4444',
+                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
+              },
+            }
+          );
+          
+          console.log('✅ Removed product from cart:', productName);
+          return `Successfully removed ${productName} from cart`;
+          
+        } catch (error) {
+          const errorMessage = `Failed to remove product from cart: ${error}`;
+          console.error('❌ Error in removeProductFromCart:', errorMessage);
+          return errorMessage;
+        }
+      },
+
+      updateCartQuantity: async (parameters: any): Promise<string | void> => {
+        console.log('📊 updateCartQuantity called with parameters:', parameters);
+        
+        try {
+          let productId: number;
+          let quantity: number;
+          
+          // Extract product_id with multiple fallback formats
+          if (parameters?.product_id !== undefined) {
+            productId = typeof parameters.product_id === 'string' 
+              ? parseInt(parameters.product_id, 10) 
+              : parameters.product_id;
+          } else if (parameters?.productId !== undefined) {
+            productId = typeof parameters.productId === 'string' 
+              ? parseInt(parameters.productId, 10) 
+              : parameters.productId;
+          } else if (parameters?.id !== undefined) {
+            productId = typeof parameters.id === 'string' 
+              ? parseInt(parameters.id, 10) 
+              : parameters.id;
+          } else if (typeof parameters === 'string') {
+            productId = parseInt(parameters, 10);
+          } else if (typeof parameters === 'number') {
+            productId = parameters;
+          } else {
+            const errorMessage = 'Product ID is required for quantity update';
+            console.error(errorMessage);
+            return errorMessage;
+          }
+          
+          // Extract quantity (required for this tool)
+          if (parameters?.quantity !== undefined) {
+            quantity = typeof parameters.quantity === 'string' 
+              ? parseInt(parameters.quantity, 10) 
+              : parameters.quantity;
+          } else {
+            const errorMessage = 'Quantity is required for cart update';
+            console.error(errorMessage);
+            return errorMessage;
+          }
+          
+          // Validate inputs
+          if (isNaN(productId)) {
+            const errorMessage = 'Invalid product ID format';
+            console.error(errorMessage);
+            return errorMessage;
+          }
+          
+          if (isNaN(quantity) || quantity < 0) {
+            const errorMessage = 'Invalid quantity - must be 0 or greater';
+            console.error(errorMessage);
+            return errorMessage;
+          }
+          
+          // Find the product in our data to get the name
+          const product = watches.find((watch: any) => watch.id === productId);
+          const productName = product ? product.name : `Product ${productId}`;
+          
+          // Check if product is in cart
+          const cartItem = state.items.find(item => item.id === productId);
+          if (!cartItem) {
+            const errorMessage = `${productName} is not in the cart`;
+            console.error(errorMessage);
+            return errorMessage;
+          }
+          
+          const oldQuantity = cartItem.quantity;
+          
+          // Update the quantity (this will remove the item if quantity is 0)
+          updateQuantity(productId, quantity);
+          
+          // Show appropriate toast message
+          if (quantity === 0) {
+            toast.success(
+              `Removed ${productName} from your cart`,
+              {
+                icon: '🗑️',
+                duration: 3000,
+                style: {
+                  background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+                  color: '#f8fafc',
+                  borderRadius: '12px',
+                  border: '1px solid #ef4444',
+                  boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
+                },
+              }
+            );
+          } else {
+            toast.success(
+              `Updated ${productName} quantity: ${oldQuantity} → ${quantity}`,
+              {
+                icon: '📊',
+                duration: 3000,
+                style: {
+                  background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+                  color: '#f8fafc',
+                  borderRadius: '12px',
+                  border: '1px solid #f59e0b',
+                  boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
+                },
+              }
+            );
+          }
+          
+          console.log('✅ Updated cart quantity:', productName, 'from', oldQuantity, 'to', quantity);
+          return `Successfully updated ${productName} quantity to ${quantity}`;
+          
+        } catch (error) {
+          const errorMessage = `Failed to update cart quantity: ${error}`;
+          console.error('❌ Error in updateCartQuantity:', errorMessage);
+          return errorMessage;
+        }
+      },
+
+      showCart: async (parameters: any): Promise<string | void> => {
+        console.log('👁️ showCart called');
+        
+        try {
+          // Open the cart
+          openCart();
+          
+          // Show toast notification
+          toast.success(
+            `Cart opened - ${state.itemCount} ${state.itemCount === 1 ? 'item' : 'items'}`,
+            {
+              icon: '🛒',
+              duration: 2000,
+              style: {
+                background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+                color: '#f8fafc',
+                borderRadius: '12px',
+                border: '1px solid #f59e0b',
+                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
+              },
+            }
+          );
+          
+          console.log('✅ Cart opened successfully');
+          return `Cart is now visible with ${state.itemCount} items`;
+          
+        } catch (error) {
+          const errorMessage = `Failed to show cart: ${error}`;
+          console.error('❌ Error in showCart:', errorMessage);
+          return errorMessage;
+        }
+      },
+
+      hideCart: async (parameters: any): Promise<string | void> => {
+        console.log('🙈 hideCart called');
+        
+        try {
+          // Close the cart
+          closeCart();
+          
+          // Show toast notification
+          toast.success(
+            'Cart hidden',
+            {
+              icon: '👋',
+              duration: 2000,
+              style: {
+                background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+                color: '#f8fafc',
+                borderRadius: '12px',
+                border: '1px solid #64748b',
+                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
+              },
+            }
+          );
+          
+          console.log('✅ Cart hidden successfully');
+          return 'Cart has been hidden';
+          
+        } catch (error) {
+          const errorMessage = `Failed to hide cart: ${error}`;
+          console.error('❌ Error in hideCart:', errorMessage);
           return errorMessage;
         }
       }
@@ -361,10 +616,8 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
         },
       });
       
-      // Auto-open cart after a short delay
-      setTimeout(() => {
-        openCart();
-      }, 1000);
+      // Don't auto-open cart anymore - removed this line
+      // setTimeout(() => { openCart(); }, 1000);
     }
   };
 
