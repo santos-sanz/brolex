@@ -2,7 +2,7 @@
 
 import { useConversation } from '@elevenlabs/react';
 import { useCallback, useState, useEffect } from 'react';
-import { Mic, Loader2, AlertCircle, Crown, Sparkles, Key, Eye, EyeOff, Play, Square, X, ShoppingCart } from 'lucide-react';
+import { Mic, Loader2, AlertCircle, Crown, Sparkles, Key, Eye, EyeOff, Play, Square, X, ShoppingCart, Zap, Heart } from 'lucide-react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import ThreeJSAnimation from './ThreeJSAnimation';
@@ -25,8 +25,38 @@ interface ElevenLabsAgentProps {
   onRemoveProduct?: (productId: number) => void;
 }
 
+// Agent configurations
+const AGENTS = {
+  MR_HYDE: {
+    id: 'agent_01jybb45c6fcwapkfyh35etnqa',
+    name: 'Mr Hyde',
+    title: 'Luxury Sales Demon',
+    description: 'Aggressive, persuasive, and slightly unhinged',
+    icon: Zap,
+    colors: {
+      primary: 'from-red-600 via-red-500 to-red-600',
+      secondary: 'from-red-900 via-red-800 to-red-900',
+      accent: 'text-red-400',
+      glow: 'bg-red-500'
+    }
+  },
+  DR_JEKYLL: {
+    id: 'agent_01jynk52vgepatyn037bfcv2ee',
+    name: 'Dr Jekyll',
+    title: 'Refined Watch Curator',
+    description: 'Sophisticated, gentle, and genuinely helpful',
+    icon: Heart,
+    colors: {
+      primary: 'from-emerald-600 via-emerald-500 to-emerald-600',
+      secondary: 'from-emerald-900 via-emerald-800 to-emerald-900',
+      accent: 'text-emerald-400',
+      glow: 'bg-emerald-500'
+    }
+  }
+};
+
 const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({ 
-  agentId, 
+  agentId: propAgentId, 
   apiKey: envApiKey, 
   onShowProductCard,
   onCloseProductCard,
@@ -40,24 +70,29 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [conversationStarted, setConversationStarted] = useState(false);
   const [addToCartAnimation, setAddToCartAnimation] = useState(false);
+  const [agentMode, setAgentMode] = useState<'MR_HYDE' | 'DR_JEKYLL'>('MR_HYDE');
 
   const { addItem, addInsurance, removeItem, updateQuantity, openCart, closeCart, state } = useCart();
   const watches = productsJson;
 
+  // Get current agent configuration
+  const currentAgent = AGENTS[agentMode];
+  const currentAgentId = currentAgent.id;
+
   const conversation = useConversation({
     onConnect: () => {
-      console.log('✅ Connected to ElevenLabs agent');
+      console.log(`✅ Connected to ${currentAgent.name} agent`);
       setError(null);
     },
     onDisconnect: () => {
-      console.log('❌ Disconnected from ElevenLabs agent');
+      console.log(`❌ Disconnected from ${currentAgent.name} agent`);
       setConversationStarted(false);
     },
     onMessage: (message) => {
-      console.log('💬 Agent message:', message);
+      console.log(`💬 ${currentAgent.name} message:`, message);
     },
     onError: (error: unknown) => {
-      console.error('❌ ElevenLabs agent error:', error);
+      console.error(`❌ ${currentAgent.name} agent error:`, error);
       const elevenLabsError = error as ElevenLabsError;
       setError(`Connection failed. Please check your API key and try again.`);
     },
@@ -127,7 +162,6 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
         try {
           let productId: number | undefined;
           
-          // Handle different parameter formats
           if (parameters?.product_id !== undefined) {
             productId = typeof parameters.product_id === 'string' 
               ? parseInt(parameters.product_id, 10) 
@@ -146,7 +180,6 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
             productId = parameters;
           }
           
-          // If productId is provided but invalid, return error
           if (productId !== undefined && isNaN(productId)) {
             const errorMessage = 'Invalid product ID format';
             console.error(errorMessage);
@@ -176,9 +209,8 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
         
         try {
           let productId: number;
-          let quantity: number = 1; // Default to 1 if not specified
+          let quantity: number = 1;
           
-          // Extract product_id with multiple fallback formats
           if (parameters?.product_id !== undefined) {
             productId = typeof parameters.product_id === 'string' 
               ? parseInt(parameters.product_id, 10) 
@@ -196,7 +228,6 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
           } else if (typeof parameters === 'number') {
             productId = parameters;
           } else {
-            // Try to extract from currently displayed product
             if (currentProduct?.displayData?.id) {
               productId = currentProduct.displayData.id;
               console.log('🎯 Using currently displayed product ID:', productId);
@@ -207,14 +238,12 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
             }
           }
           
-          // Extract quantity (optional, defaults to 1)
           if (parameters?.quantity !== undefined) {
             quantity = typeof parameters.quantity === 'string' 
               ? parseInt(parameters.quantity, 10) 
               : parameters.quantity;
           }
           
-          // Validate inputs
           if (isNaN(productId)) {
             const errorMessage = 'Invalid product ID format';
             console.error(errorMessage);
@@ -222,10 +251,9 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
           }
           
           if (isNaN(quantity) || quantity < 1) {
-            quantity = 1; // Default to 1 if invalid
+            quantity = 1;
           }
           
-          // Find the product in our data
           const product = watches.find((watch: any) => watch.id === productId);
           
           if (!product) {
@@ -236,33 +264,33 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
           
           console.log('✅ Found product:', product.name);
           
-          // Trigger add to cart animation on the product card
           setAddToCartAnimation(true);
           setTimeout(() => setAddToCartAnimation(false), 2000);
           
-          // Add to cart multiple times if quantity > 1
           for (let i = 0; i < quantity; i++) {
             addItem(product);
           }
           
-          // Show success toast with animation
-          toast.success(
-            `Added ${quantity}x ${product.name} to your collection! 👑`,
-            {
-              icon: '🛒',
-              duration: 4000,
-              style: {
-                background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
-                color: '#f8fafc',
-                borderRadius: '12px',
-                border: '1px solid #f59e0b',
-                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
-              },
-            }
-          );
+          // Agent-specific toast messages
+          const toastMessage = agentMode === 'MR_HYDE' 
+            ? `BOOM! ${quantity}x ${product.name} ADDED! Your wallet will never recover! 💥`
+            : `Added ${quantity}x ${product.name} to your collection with care 🌟`;
           
-          // Don't auto-open cart anymore - removed this line
-          // setTimeout(() => { openCart(); }, 1000);
+          const toastIcon = agentMode === 'MR_HYDE' ? '💥' : '🌟';
+          
+          toast.success(toastMessage, {
+            icon: toastIcon,
+            duration: 4000,
+            style: {
+              background: agentMode === 'MR_HYDE' 
+                ? 'linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)'
+                : 'linear-gradient(135deg, #064e3b 0%, #065f46 100%)',
+              color: '#f8fafc',
+              borderRadius: '12px',
+              border: agentMode === 'MR_HYDE' ? '1px solid #ef4444' : '1px solid #10b981',
+              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
+            },
+          });
           
           return `Successfully added ${quantity}x ${product.name} to cart`;
           
@@ -279,7 +307,6 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
         try {
           let productId: number;
           
-          // Extract product_id with multiple fallback formats
           if (parameters?.product_id !== undefined) {
             productId = typeof parameters.product_id === 'string' 
               ? parseInt(parameters.product_id, 10) 
@@ -302,18 +329,15 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
             return errorMessage;
           }
           
-          // Validate input
           if (isNaN(productId)) {
             const errorMessage = 'Invalid product ID format';
             console.error(errorMessage);
             return errorMessage;
           }
           
-          // Find the product in our data to get the name
           const product = watches.find((watch: any) => watch.id === productId);
           const productName = product ? product.name : `Product ${productId}`;
           
-          // Check if product is in cart
           const cartItem = state.items.find(item => item.id === productId);
           if (!cartItem) {
             const errorMessage = `${productName} is not in the cart`;
@@ -321,24 +345,27 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
             return errorMessage;
           }
           
-          // Remove the product from cart
           removeItem(productId);
           
-          // Show success toast
-          toast.success(
-            `Removed ${productName} from your cart`,
-            {
-              icon: '🗑️',
-              duration: 3000,
-              style: {
-                background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
-                color: '#f8fafc',
-                borderRadius: '12px',
-                border: '1px solid #ef4444',
-                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
-              },
-            }
-          );
+          const toastMessage = agentMode === 'MR_HYDE' 
+            ? `DESTROYED! ${productName} has been OBLITERATED from your cart! 💀`
+            : `Gently removed ${productName} from your collection 🌸`;
+          
+          const toastIcon = agentMode === 'MR_HYDE' ? '💀' : '🌸';
+          
+          toast.success(toastMessage, {
+            icon: toastIcon,
+            duration: 3000,
+            style: {
+              background: agentMode === 'MR_HYDE' 
+                ? 'linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)'
+                : 'linear-gradient(135deg, #064e3b 0%, #065f46 100%)',
+              color: '#f8fafc',
+              borderRadius: '12px',
+              border: agentMode === 'MR_HYDE' ? '1px solid #ef4444' : '1px solid #10b981',
+              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
+            },
+          });
           
           console.log('✅ Removed product from cart:', productName);
           return `Successfully removed ${productName} from cart`;
@@ -357,7 +384,6 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
           let productId: number;
           let quantity: number;
           
-          // Extract product_id with multiple fallback formats
           if (parameters?.product_id !== undefined) {
             productId = typeof parameters.product_id === 'string' 
               ? parseInt(parameters.product_id, 10) 
@@ -380,7 +406,6 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
             return errorMessage;
           }
           
-          // Extract quantity (required for this tool)
           if (parameters?.quantity !== undefined) {
             quantity = typeof parameters.quantity === 'string' 
               ? parseInt(parameters.quantity, 10) 
@@ -391,7 +416,6 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
             return errorMessage;
           }
           
-          // Validate inputs
           if (isNaN(productId)) {
             const errorMessage = 'Invalid product ID format';
             console.error(errorMessage);
@@ -404,11 +428,9 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
             return errorMessage;
           }
           
-          // Find the product in our data to get the name
           const product = watches.find((watch: any) => watch.id === productId);
           const productName = product ? product.name : `Product ${productId}`;
           
-          // Check if product is in cart
           const cartItem = state.items.find(item => item.id === productId);
           if (!cartItem) {
             const errorMessage = `${productName} is not in the cart`;
@@ -417,41 +439,48 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
           }
           
           const oldQuantity = cartItem.quantity;
-          
-          // Update the quantity (this will remove the item if quantity is 0)
           updateQuantity(productId, quantity);
           
-          // Show appropriate toast message
           if (quantity === 0) {
-            toast.success(
-              `Removed ${productName} from your cart`,
-              {
-                icon: '🗑️',
-                duration: 3000,
-                style: {
-                  background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
-                  color: '#f8fafc',
-                  borderRadius: '12px',
-                  border: '1px solid #ef4444',
-                  boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
-                },
-              }
-            );
+            const toastMessage = agentMode === 'MR_HYDE' 
+              ? `ANNIHILATED! ${productName} has been PURGED! 🔥`
+              : `Carefully removed ${productName} from your collection 🍃`;
+            
+            const toastIcon = agentMode === 'MR_HYDE' ? '🔥' : '🍃';
+            
+            toast.success(toastMessage, {
+              icon: toastIcon,
+              duration: 3000,
+              style: {
+                background: agentMode === 'MR_HYDE' 
+                  ? 'linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)'
+                  : 'linear-gradient(135deg, #064e3b 0%, #065f46 100%)',
+                color: '#f8fafc',
+                borderRadius: '12px',
+                border: agentMode === 'MR_HYDE' ? '1px solid #ef4444' : '1px solid #10b981',
+                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
+              },
+            });
           } else {
-            toast.success(
-              `Updated ${productName} quantity: ${oldQuantity} → ${quantity}`,
-              {
-                icon: '📊',
-                duration: 3000,
-                style: {
-                  background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
-                  color: '#f8fafc',
-                  borderRadius: '12px',
-                  border: '1px solid #f59e0b',
-                  boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
-                },
-              }
-            );
+            const toastMessage = agentMode === 'MR_HYDE' 
+              ? `QUANTITY SMASHED! ${productName}: ${oldQuantity} → ${quantity} BOOM! 💥`
+              : `Thoughtfully updated ${productName}: ${oldQuantity} → ${quantity} ✨`;
+            
+            const toastIcon = agentMode === 'MR_HYDE' ? '💥' : '✨';
+            
+            toast.success(toastMessage, {
+              icon: toastIcon,
+              duration: 3000,
+              style: {
+                background: agentMode === 'MR_HYDE' 
+                  ? 'linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)'
+                  : 'linear-gradient(135deg, #064e3b 0%, #065f46 100%)',
+                color: '#f8fafc',
+                borderRadius: '12px',
+                border: agentMode === 'MR_HYDE' ? '1px solid #ef4444' : '1px solid #10b981',
+                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
+              },
+            });
           }
           
           console.log('✅ Updated cart quantity:', productName, 'from', oldQuantity, 'to', quantity);
@@ -468,24 +497,27 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
         console.log('👁️ showCart called');
         
         try {
-          // Open the cart
           openCart();
           
-          // Show toast notification
-          toast.success(
-            `Cart opened - ${state.itemCount} ${state.itemCount === 1 ? 'item' : 'items'}`,
-            {
-              icon: '🛒',
-              duration: 2000,
-              style: {
-                background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
-                color: '#f8fafc',
-                borderRadius: '12px',
-                border: '1px solid #f59e0b',
-                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
-              },
-            }
-          );
+          const toastMessage = agentMode === 'MR_HYDE' 
+            ? `CART UNLEASHED! ${state.itemCount} items of DESTRUCTION! 💀`
+            : `Cart gracefully opened - ${state.itemCount} ${state.itemCount === 1 ? 'item' : 'items'} 🌺`;
+          
+          const toastIcon = agentMode === 'MR_HYDE' ? '💀' : '🌺';
+          
+          toast.success(toastMessage, {
+            icon: toastIcon,
+            duration: 2000,
+            style: {
+              background: agentMode === 'MR_HYDE' 
+                ? 'linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)'
+                : 'linear-gradient(135deg, #064e3b 0%, #065f46 100%)',
+              color: '#f8fafc',
+              borderRadius: '12px',
+              border: agentMode === 'MR_HYDE' ? '1px solid #ef4444' : '1px solid #10b981',
+              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
+            },
+          });
           
           console.log('✅ Cart opened successfully');
           return `Cart is now visible with ${state.itemCount} items`;
@@ -501,24 +533,27 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
         console.log('🙈 hideCart called');
         
         try {
-          // Close the cart
           closeCart();
           
-          // Show toast notification
-          toast.success(
-            'Cart hidden',
-            {
-              icon: '👋',
-              duration: 2000,
-              style: {
-                background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
-                color: '#f8fafc',
-                borderRadius: '12px',
-                border: '1px solid #64748b',
-                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
-              },
-            }
-          );
+          const toastMessage = agentMode === 'MR_HYDE' 
+            ? 'Cart BANISHED to the shadow realm! 👹'
+            : 'Cart gently tucked away 🌙';
+          
+          const toastIcon = agentMode === 'MR_HYDE' ? '👹' : '🌙';
+          
+          toast.success(toastMessage, {
+            icon: toastIcon,
+            duration: 2000,
+            style: {
+              background: agentMode === 'MR_HYDE' 
+                ? 'linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)'
+                : 'linear-gradient(135deg, #064e3b 0%, #065f46 100%)',
+              color: '#f8fafc',
+              borderRadius: '12px',
+              border: agentMode === 'MR_HYDE' ? '1px solid #ef4444' : '1px solid #10b981',
+              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
+            },
+          });
           
           console.log('✅ Cart hidden successfully');
           return 'Cart has been hidden';
@@ -534,24 +569,27 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
         console.log('🛡️ offerWatchInsurance called');
         
         try {
-          // Check if insurance is already in cart
           const hasInsurance = state.items.some(item => item.isInsurance);
           
           if (hasInsurance) {
-            const message = 'You already have our Premium Protection Plan in your cart! Your luxury timepieces are well protected.';
+            const message = agentMode === 'MR_HYDE' 
+              ? 'You ALREADY have our ULTIMATE Protection Plan! Your watches are INVINCIBLE!'
+              : 'You already have our Premium Protection Plan in your cart! Your luxury timepieces are well protected.';
+            
             console.log('ℹ️ Insurance already in cart');
             
-            // Show toast notification
             toast.success(
-              'Protection Plan already active! 🛡️',
+              agentMode === 'MR_HYDE' ? 'PROTECTION ALREADY ACTIVE! 🔥' : 'Protection Plan already active! 🛡️',
               {
-                icon: '✅',
+                icon: agentMode === 'MR_HYDE' ? '🔥' : '✅',
                 duration: 3000,
                 style: {
-                  background: 'linear-gradient(135deg, #065f46 0%, #047857 100%)',
+                  background: agentMode === 'MR_HYDE' 
+                    ? 'linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)'
+                    : 'linear-gradient(135deg, #065f46 0%, #047857 100%)',
                   color: '#f0fdf4',
                   borderRadius: '12px',
-                  border: '1px solid #10b981',
+                  border: agentMode === 'MR_HYDE' ? '1px solid #ef4444' : '1px solid #10b981',
                   boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
                 },
               }
@@ -560,33 +598,37 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
             return message;
           }
           
-          // Add insurance to cart
           addInsurance();
           
-          // Show dramatic insurance toast
-          toast.success(
-            'Premium Protection Plan added! Your watches are now insured against reality! 🛡️✨',
-            {
-              icon: '🛡️',
-              duration: 5000,
-              style: {
-                background: 'linear-gradient(135deg, #065f46 0%, #047857 100%)',
-                color: '#f0fdf4',
-                borderRadius: '12px',
-                border: '1px solid #10b981',
-                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
-              },
-            }
-          );
+          const toastMessage = agentMode === 'MR_HYDE' 
+            ? 'ULTIMATE PROTECTION UNLEASHED! Your watches are now IMMORTAL! 🔥⚡'
+            : 'Premium Protection Plan added! Your watches are now insured against reality! 🛡️✨';
           
-          // Auto-open cart to show the insurance
+          const toastIcon = agentMode === 'MR_HYDE' ? '⚡' : '🛡️';
+          
+          toast.success(toastMessage, {
+            icon: toastIcon,
+            duration: 5000,
+            style: {
+              background: agentMode === 'MR_HYDE' 
+                ? 'linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)'
+                : 'linear-gradient(135deg, #065f46 0%, #047857 100%)',
+              color: '#f0fdf4',
+              borderRadius: '12px',
+              border: agentMode === 'MR_HYDE' ? '1px solid #ef4444' : '1px solid #10b981',
+              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
+            },
+          });
+          
           setTimeout(() => {
             openCart();
           }, 1000);
           
           console.log('✅ Insurance added to cart successfully');
           
-          const message = `Excellent choice! I've added our Premium Protection Plan ($999) to your cart. This comprehensive coverage protects your luxury timepiece investment against water damage (from tears of regret), reality checks, and provides 24/7 customer support in your dreams. Your watches are now fully protected!`;
+          const message = agentMode === 'MR_HYDE' 
+            ? `BOOM! I've SLAMMED our ULTIMATE Protection Plan ($999) into your cart! This INSANE coverage will DESTROY any threats to your timepieces! Water damage? OBLITERATED! Reality checks? ANNIHILATED! Your watches are now UNSTOPPABLE FORCES OF LUXURY!`
+            : `Excellent choice! I've thoughtfully added our Premium Protection Plan ($999) to your cart. This comprehensive coverage protects your luxury timepiece investment against water damage (from tears of regret), reality checks, and provides 24/7 customer support in your dreams. Your watches are now fully protected!`;
           
           return message;
           
@@ -607,6 +649,34 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
       setShowApiKeyInput(true);
     }
   }, [envApiKey]);
+
+  // Handle agent mode switch
+  const handleAgentSwitch = (newMode: 'MR_HYDE' | 'DR_JEKYLL') => {
+    if (conversation.status === 'connected') {
+      conversation.endSession();
+      setConversationStarted(false);
+    }
+    setAgentMode(newMode);
+    
+    // Show agent switch toast
+    const newAgent = AGENTS[newMode];
+    toast.success(
+      `Switched to ${newAgent.name} mode! ${newAgent.description}`,
+      {
+        icon: newMode === 'MR_HYDE' ? '⚡' : '💚',
+        duration: 3000,
+        style: {
+          background: newMode === 'MR_HYDE' 
+            ? 'linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)'
+            : 'linear-gradient(135deg, #064e3b 0%, #065f46 100%)',
+          color: '#f8fafc',
+          borderRadius: '12px',
+          border: newMode === 'MR_HYDE' ? '1px solid #ef4444' : '1px solid #10b981',
+          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
+        },
+      }
+    );
+  };
 
   const handleApiKeySubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -630,7 +700,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
       await conversation.startSession({
-        agentId: agentId,
+        agentId: currentAgentId,
       });
 
       setConversationStarted(true);
@@ -638,7 +708,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
       console.error('Failed to start conversation:', error);
       setError('Failed to start conversation. Please check your microphone permissions and ensure the agent is accessible.');
     }
-  }, [conversation, agentId, currentApiKey]);
+  }, [conversation, currentAgentId, currentApiKey]);
 
   const stopConversation = useCallback(async () => {
     await conversation.endSession();
@@ -671,20 +741,26 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
       setTimeout(() => setAddToCartAnimation(false), 2000);
       
       addItem(currentProduct.displayData);
-      toast.success(`Added ${currentProduct.displayData.name} to your collection of dreams!`, {
-        icon: '👑',
+      
+      const toastMessage = agentMode === 'MR_HYDE' 
+        ? `BOOM! ${currentProduct.displayData.name} SMASHED into your collection! 💥`
+        : `Added ${currentProduct.displayData.name} to your collection with care 🌟`;
+      
+      const toastIcon = agentMode === 'MR_HYDE' ? '💥' : '🌟';
+      
+      toast.success(toastMessage, {
+        icon: toastIcon,
         duration: 3000,
         style: {
-          background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+          background: agentMode === 'MR_HYDE' 
+            ? 'linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)'
+            : 'linear-gradient(135deg, #064e3b 0%, #065f46 100%)',
           color: '#f8fafc',
           borderRadius: '12px',
-          border: '1px solid #f59e0b',
+          border: agentMode === 'MR_HYDE' ? '1px solid #ef4444' : '1px solid #10b981',
           boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
         },
       });
-      
-      // Don't auto-open cart anymore - removed this line
-      // setTimeout(() => { openCart(); }, 1000);
     }
   };
 
@@ -692,8 +768,39 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
   if (showApiKeyInput) {
     return (
       <div className="h-full flex flex-col">
+        {/* Agent Mode Switch */}
+        <div className="bg-slate-100 p-4 border-b border-slate-200">
+          <div className="flex items-center justify-center space-x-4">
+            <span className="text-sm font-medium text-slate-700">Agent Mode:</span>
+            <div className="flex bg-white rounded-lg p-1 shadow-sm border border-slate-200">
+              <button
+                onClick={() => handleAgentSwitch('MR_HYDE')}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                  agentMode === 'MR_HYDE'
+                    ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md'
+                    : 'text-slate-600 hover:text-red-600'
+                }`}
+              >
+                <Zap className="w-4 h-4" />
+                <span>Mr Hyde</span>
+              </button>
+              <button
+                onClick={() => handleAgentSwitch('DR_JEKYLL')}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                  agentMode === 'DR_JEKYLL'
+                    ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-md'
+                    : 'text-slate-600 hover:text-emerald-600'
+                }`}
+              >
+                <Heart className="w-4 h-4" />
+                <span>Dr Jekyll</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Compact Header */}
-        <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 p-4 text-white">
+        <div className={`bg-gradient-to-r ${currentAgent.colors.primary} p-4 text-white`}>
           <div className="flex items-center space-x-3">
             <div className="relative">
               <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
@@ -703,7 +810,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
             </div>
             <div>
               <h3 className="text-lg font-bold">Connect API Key</h3>
-              <p className="text-amber-100 text-xs">Enter your ElevenLabs API key</p>
+              <p className="text-white/80 text-xs">Enter your ElevenLabs API key for {currentAgent.name}</p>
             </div>
           </div>
         </div>
@@ -713,16 +820,16 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
           <div className="w-full max-w-sm space-y-6">
             <div className="text-center space-y-3">
               <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center mx-auto shadow-lg">
-                  <Key className="w-8 h-8 text-white" />
+                <div className={`w-16 h-16 bg-gradient-to-br ${currentAgent.colors.primary} rounded-xl flex items-center justify-center mx-auto shadow-lg`}>
+                  <currentAgent.icon className="w-8 h-8 text-white" />
                 </div>
-                <div className="absolute inset-0 bg-amber-500 opacity-20 blur-xl rounded-full"></div>
+                <div className={`absolute inset-0 ${currentAgent.colors.glow} opacity-20 blur-xl rounded-full`}></div>
               </div>
               
               <div>
-                <h4 className="text-xl font-bold text-slate-900 mb-1">Ready to Chat?</h4>
+                <h4 className="text-xl font-bold text-slate-900 mb-1">Ready to Chat with {currentAgent.name}?</h4>
                 <p className="text-slate-600 text-xs">
-                  Connect your ElevenLabs API key to start chatting
+                  {currentAgent.description}
                 </p>
               </div>
             </div>
@@ -761,7 +868,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
               <button
                 type="submit"
                 disabled={!inputApiKey.trim() || !inputApiKey.startsWith('sk_')}
-                className="w-full bg-gradient-to-r from-amber-600 to-amber-500 text-white font-semibold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2 text-sm"
+                className={`w-full bg-gradient-to-r ${currentAgent.colors.primary} text-white font-semibold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2 text-sm`}
               >
                 <Play className="w-4 h-4" />
                 <span>Start Conversation</span>
@@ -769,12 +876,12 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
             </form>
 
             <div className="bg-slate-50 rounded-lg p-4 space-y-3">
-              <h5 className="text-amber-600 font-semibold text-xs flex items-center space-x-2">
+              <h5 className={`${currentAgent.colors.accent} font-semibold text-xs flex items-center space-x-2`}>
                 <Sparkles className="w-3 h-3" />
                 <span>How to get your API key</span>
               </h5>
               <ol className="text-xs text-slate-600 space-y-1 list-decimal list-inside">
-                <li>Visit <a href="https://elevenlabs.io" target="_blank" rel="noopener noreferrer" className="text-amber-600 hover:underline font-medium">elevenlabs.io</a></li>
+                <li>Visit <a href="https://elevenlabs.io" target="_blank" rel="noopener noreferrer" className={`${currentAgent.colors.accent} hover:underline font-medium`}>elevenlabs.io</a></li>
                 <li>Navigate to your profile settings</li>
                 <li>Find and copy your API key (starts with "sk_")</li>
               </ol>
@@ -812,19 +919,52 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
 
   return (
     <div className="h-full flex flex-col">
+      {/* Agent Mode Switch */}
+      <div className="bg-slate-100 p-3 border-b border-slate-200">
+        <div className="flex items-center justify-center space-x-4">
+          <span className="text-sm font-medium text-slate-700">Agent Mode:</span>
+          <div className="flex bg-white rounded-lg p-1 shadow-sm border border-slate-200">
+            <button
+              onClick={() => handleAgentSwitch('MR_HYDE')}
+              disabled={conversation.status === 'connected'}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                agentMode === 'MR_HYDE'
+                  ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md'
+                  : 'text-slate-600 hover:text-red-600'
+              } ${conversation.status === 'connected' ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <Zap className="w-4 h-4" />
+              <span>Mr Hyde</span>
+            </button>
+            <button
+              onClick={() => handleAgentSwitch('DR_JEKYLL')}
+              disabled={conversation.status === 'connected'}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                agentMode === 'DR_JEKYLL'
+                  ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-md'
+                  : 'text-slate-600 hover:text-emerald-600'
+              } ${conversation.status === 'connected' ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <Heart className="w-4 h-4" />
+              <span>Dr Jekyll</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Compact Header */}
-      <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 p-4 text-white">
+      <div className={`bg-gradient-to-r ${currentAgent.colors.primary} p-4 text-white`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="relative">
               <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
-                <Crown className="w-5 h-5" />
+                <currentAgent.icon className="w-5 h-5" />
               </div>
               <Sparkles className="w-3 h-3 absolute -top-1 -right-1 text-yellow-300" />
             </div>
             <div>
-              <h3 className="text-lg font-bold">Brolex AI Concierge</h3>
-              <p className="text-amber-100 text-xs">
+              <h3 className="text-lg font-bold">{currentAgent.name} - {currentAgent.title}</h3>
+              <p className="text-white/80 text-xs">
                 {conversation.status === 'connected' ? 'Connected and ready' : 
                  conversation.status === 'connecting' ? 'Connecting...' : 'Ready to connect'}
               </p>
@@ -851,7 +991,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
         </div>
       </div>
 
-      {/* Main Content Area - Reduced height and centered */}
+      {/* Main Content Area */}
       <div className="flex-1 flex bg-gradient-to-br from-slate-50 to-white min-h-0">
         {/* Left Side - Agent Interface */}
         <div className="flex-1 flex flex-col items-center justify-center p-4">
@@ -863,14 +1003,13 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                   size={180}
                 />
               </div>
-              <Loader2 className="w-6 h-6 text-amber-600 animate-spin mx-auto" />
-              <p className="text-slate-700 font-medium text-sm">Connecting...</p>
+              <Loader2 className={`w-6 h-6 ${currentAgent.colors.accent} animate-spin mx-auto`} />
+              <p className="text-slate-700 font-medium text-sm">Connecting to {currentAgent.name}...</p>
             </div>
           )}
 
           {conversation.status === 'disconnected' && !conversationStarted && (
             <div className="space-y-6 max-w-md text-center">
-              {/* Three.js circular animation - centered */}
               <div className="relative flex items-center justify-center">
                 <ThreeJSAnimation 
                   isConnecting={false}
@@ -879,21 +1018,20 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                   size={200}
                 />
                 
-                {/* Overlay button - centered */}
                 <div className="absolute inset-0 flex items-center justify-center">
                   <button
                     onClick={startConversation}
                     className="bg-white/90 backdrop-blur-sm text-slate-600 font-medium py-2 px-4 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 border border-slate-200 text-sm"
                   >
-                    Talk to interrupt
+                    Talk to {currentAgent.name}
                   </button>
                 </div>
               </div>
               
               <div className="space-y-3">
-                <h4 className="text-xl font-bold text-slate-900">Welcome to Brolex Concierge</h4>
+                <h4 className="text-xl font-bold text-slate-900">{currentAgent.name} - {currentAgent.title}</h4>
                 <p className="text-slate-600 text-sm">
-                  Your personal luxury timepiece consultant is ready to help you find the perfect watch.
+                  {currentAgent.description}
                 </p>
               </div>
             </div>
@@ -901,7 +1039,6 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
 
           {conversation.status === 'connected' && (
             <div className="space-y-6 w-full max-w-md text-center">
-              {/* Three.js listening/speaking animation - centered */}
               <div className="relative flex items-center justify-center">
                 <ThreeJSAnimation 
                   isListening={!conversation.isSpeaking}
@@ -910,10 +1047,9 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                   size={200}
                 />
                 
-                {/* Status overlay - centered */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="bg-white/90 backdrop-blur-sm text-slate-600 font-medium py-1 px-3 rounded-full shadow-lg border border-slate-200 text-sm">
-                    {conversation.isSpeaking ? 'AI Speaking...' : 'Listening...'}
+                    {conversation.isSpeaking ? `${currentAgent.name} Speaking...` : 'Listening...'}
                   </div>
                 </div>
               </div>
@@ -921,8 +1057,8 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
               <div className="space-y-2">
                 <p className="text-slate-600 text-sm">
                   {conversation.isSpeaking 
-                    ? 'The AI concierge is providing luxury advice'
-                    : 'Speak naturally about your timepiece needs'
+                    ? `${currentAgent.name} is providing ${agentMode === 'MR_HYDE' ? 'aggressive' : 'thoughtful'} advice`
+                    : `Speak naturally about your timepiece needs to ${currentAgent.name}`
                   }
                 </p>
               </div>
@@ -941,7 +1077,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
           )}
         </div>
 
-        {/* Right Side - Product Display with Smooth Animation */}
+        {/* Right Side - Product Display */}
         <AnimatePresence mode="wait">
           {currentProduct && currentProduct.displayData && (
             <motion.div
@@ -981,12 +1117,12 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                   opacity: 1,
                   transition: { delay: 0.2, duration: 0.3 }
                 }}
-                className="bg-gradient-to-r from-slate-800 to-slate-900 p-3 text-white"
+                className={`bg-gradient-to-r ${currentAgent.colors.secondary} p-3 text-white`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <Crown className="w-4 h-4 text-amber-400" />
-                    <span className="font-semibold text-sm">Recommended</span>
+                    <currentAgent.icon className={`w-4 h-4 ${currentAgent.colors.accent}`} />
+                    <span className="font-semibold text-sm">Recommended by {currentAgent.name}</span>
                   </div>
                   <button
                     onClick={() => onRemoveProduct?.(currentProduct.productId)}
@@ -999,7 +1135,6 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
 
               {/* Product Content */}
               <div className="flex-1 p-4 space-y-4">
-                {/* Product Image */}
                 <motion.div 
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ 
@@ -1018,7 +1153,6 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                   />
                 </motion.div>
 
-                {/* Product Info */}
                 <motion.div 
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ 
@@ -1032,7 +1166,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                     <h3 className="text-lg font-bold text-slate-900 font-playfair">
                       {currentProduct.displayData.name}
                     </h3>
-                    <p className="text-amber-600 text-xs italic mt-1">
+                    <p className={`text-xs italic mt-1 ${currentAgent.colors.accent}`}>
                       {currentProduct.displayData.tagline}
                     </p>
                   </div>
@@ -1045,7 +1179,6 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                     {currentProduct.displayData.description}
                   </p>
 
-                  {/* Features */}
                   {currentProduct.displayData.features && (
                     <div className="space-y-2">
                       <h4 className="font-semibold text-slate-900 text-xs">Features:</h4>
@@ -1061,7 +1194,7 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                             }}
                             className="text-xs text-slate-600 flex items-start space-x-2"
                           >
-                            <div className="w-1 h-1 bg-amber-500 rounded-full mt-1.5 flex-shrink-0"></div>
+                            <div className={`w-1 h-1 ${currentAgent.colors.glow} rounded-full mt-1.5 flex-shrink-0`}></div>
                             <span>{feature}</span>
                           </motion.li>
                         ))}
@@ -1070,7 +1203,6 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                   )}
                 </motion.div>
 
-                {/* Add to Cart Button with Enhanced Animation */}
                 <motion.button 
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ 
@@ -1084,14 +1216,12 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                   className={`w-full font-semibold py-2.5 px-4 rounded-lg shadow-lg hover:shadow-xl transform transition-all duration-300 flex items-center justify-center space-x-2 text-sm relative overflow-hidden ${
                     addToCartAnimation 
                       ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white scale-105' 
-                      : 'bg-gradient-to-r from-slate-900 to-slate-800 text-white'
+                      : `bg-gradient-to-r ${currentAgent.colors.secondary} text-white`
                   }`}
                 >
-                  {/* Enhanced Animation overlay */}
                   <AnimatePresence>
                     {addToCartAnimation && (
                       <>
-                        {/* Ripple effect */}
                         <motion.div
                           initial={{ scale: 0, opacity: 0.8 }}
                           animate={{ scale: 4, opacity: 0 }}
@@ -1100,7 +1230,6 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                           className="absolute inset-0 bg-green-400 rounded-lg"
                         />
                         
-                        {/* Success checkmark */}
                         <motion.div
                           initial={{ scale: 0, opacity: 0, rotate: -180 }}
                           animate={{ scale: 1, opacity: 1, rotate: 0 }}
@@ -1118,7 +1247,6 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                           </motion.div>
                         </motion.div>
                         
-                        {/* Sparkle effects */}
                         {[...Array(6)].map((_, i) => (
                           <motion.div
                             key={i}
@@ -1145,7 +1273,6 @@ const ElevenLabsAgent: React.FC<ElevenLabsAgentProps> = ({
                     )}
                   </AnimatePresence>
                   
-                  {/* Button content */}
                   <motion.div
                     animate={{ 
                       opacity: addToCartAnimation ? 0 : 1,
