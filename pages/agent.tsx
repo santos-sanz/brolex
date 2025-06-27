@@ -38,11 +38,11 @@ export default function Agent() {
       </Head>
       
       <Layout>
-        {/* Main Agent Section - Compact Height */}
+        {/* Main Agent Section - Extended Height for Product Cards */}
         <section className="bg-gradient-to-br from-slate-50 to-white py-8 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto">
-            {/* Agent Container - Reduced height */}
-            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200 h-[600px]">
+          <div className="max-w-6xl mx-auto">
+            {/* Agent Container - Extended height and width for better product card visibility */}
+            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200 min-h-[700px]">
               <ElevenLabsAgent 
                 agentId={AGENT_ID} 
                 apiKey={apiKey}

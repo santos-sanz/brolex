@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { ElevenLabsConversationalAI } from '@elevenlabs/react';
-import { Mic, MicOff, Volume2, VolumeX, Zap, Heart, Crown, Shield, Sparkles } from 'lucide-react';
+import { Mic, MicOff, Volume2, VolumeX, Zap, Heart, Crown, Shield, Sparkles, Key, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useCart } from '../contexts/CartContext';
@@ -57,7 +57,7 @@ interface ElevenLabsAgentProps {
 
 export default function ElevenLabsAgent({ 
   agentId, 
-  apiKey, 
+  apiKey: initialApiKey, 
   onShowProductCard, 
   onCloseProductCard,
   currentProduct,
@@ -69,6 +69,12 @@ export default function ElevenLabsAgent({
   const [isMuted, setIsMuted] = useState(false);
   const [agentMode, setAgentMode] = useState<AgentMode>('MR_HYDE');
   const [isConnecting, setIsConnecting] = useState(false);
+  
+  // API Key management
+  const [apiKey, setApiKey] = useState(initialApiKey || '');
+  const [showApiKeyInput, setShowApiKeyInput] = useState(!initialApiKey);
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [tempApiKey, setTempApiKey] = useState('');
   
   const { 
     state, 
@@ -91,6 +97,39 @@ export default function ElevenLabsAgent({
   // Get current agent configuration
   const currentAgent = AGENTS[agentMode];
   const currentAgentId = currentAgent.id;
+
+  // Load products data
+  const [productsData, setProductsData] = useState<any[]>([]);
+  
+  useEffect(() => {
+    // Load products data
+    import('../data/products.json').then((data) => {
+      setProductsData(data.default || data);
+    });
+  }, []);
+
+  // Handle API key submission
+  const handleApiKeySubmit = () => {
+    if (tempApiKey.trim()) {
+      setApiKey(tempApiKey.trim());
+      setShowApiKeyInput(false);
+      localStorage.setItem('elevenlabs-api-key', tempApiKey.trim());
+      toast.success('API Key saved successfully! 🔑', {
+        icon: '✅',
+      });
+    } else {
+      toast.error('Please enter a valid API key');
+    }
+  };
+
+  // Load API key from localStorage on mount
+  useEffect(() => {
+    const savedApiKey = localStorage.getItem('elevenlabs-api-key');
+    if (savedApiKey && !apiKey) {
+      setApiKey(savedApiKey);
+      setShowApiKeyInput(false);
+    }
+  }, []);
 
   // Handle agent mode switching
   const handleAgentSwitch = (newMode: AgentMode) => {
@@ -131,8 +170,7 @@ export default function ElevenLabsAgent({
       const productId = parseInt(productData.product_id, 10);
       
       // Find product in our data
-      const productsJson = require('../data/products.json');
-      const product = productsJson.find((p: any) => p.id === productId);
+      const product = productsData.find((p: any) => p.id === productId);
       
       if (product) {
         addItem(product);
@@ -172,11 +210,14 @@ export default function ElevenLabsAgent({
     
     try {
       const productId = parseInt(productData.product_id, 10);
+      const cartItem = state.items.find(item => item.id === productId);
+      const productName = cartItem ? cartItem.name : 'Product';
+      
       removeItem(productId);
       
       // Agent-specific responses
       if (agentMode === 'MR_HYDE') {
-        toast.success('DESTROYED! Item BANISHED from your collection! 💀', {
+        toast.success(`DESTROYED! ${productName} BANISHED from your collection! 💀`, {
           icon: '💥',
           style: {
             background: '#dc2626',
@@ -184,7 +225,7 @@ export default function ElevenLabsAgent({
           },
         });
       } else {
-        toast.success('Item gently removed from your collection 🌸', {
+        toast.success(`${productName} gently removed from your collection 🌸`, {
           icon: '🗑️',
           style: {
             background: '#059669',
@@ -203,7 +244,7 @@ export default function ElevenLabsAgent({
     
     try {
       const productId = parseInt(productData.product_id, 10);
-      const quantity = Math.max(0, productData.quantity); // Ensure non-negative quantity
+      const quantity = Math.max(0, Number(productData.quantity)); // Ensure non-negative quantity
       
       // Find the product in cart to get its name for the toast
       const cartItem = state.items.find(item => item.id === productId);
@@ -412,6 +453,25 @@ export default function ElevenLabsAgent({
       console.log('🔗 Connected to ElevenLabs');
       setIsConnected(true);
       setIsConnecting(false);
+      
+      // Agent-specific connection messages
+      if (agentMode === 'MR_HYDE') {
+        toast.success('🔥 Mr Hyde is ONLINE! Ready to DOMINATE luxury sales!', {
+          icon: '⚡',
+          style: {
+            background: '#dc2626',
+            color: '#ffffff',
+          },
+        });
+      } else {
+        toast.success('💚 Dr Jekyll connected gracefully. How may I assist you today?', {
+          icon: '🌟',
+          style: {
+            background: '#059669',
+            color: '#ffffff',
+          },
+        });
+      }
     },
     onDisconnect: () => {
       console.log('🔌 Disconnected from ElevenLabs');
@@ -419,11 +479,30 @@ export default function ElevenLabsAgent({
       setIsListening(false);
       setIsSpeaking(false);
       setIsConnecting(false);
+      
+      // Agent-specific disconnection messages
+      if (agentMode === 'MR_HYDE') {
+        toast.error('💀 Mr Hyde has VANISHED into the shadows!', {
+          icon: '👻',
+          style: {
+            background: '#dc2626',
+            color: '#ffffff',
+          },
+        });
+      } else {
+        toast.info('🌙 Dr Jekyll has retired for the evening. Thank you!', {
+          icon: '💤',
+          style: {
+            background: '#059669',
+            color: '#ffffff',
+          },
+        });
+      }
     },
     onError: (error: any) => {
       console.error('❌ ElevenLabs error:', error);
       setIsConnecting(false);
-      toast.error('Connection failed. Please try again.');
+      toast.error('Connection failed. Please check your API key and try again.');
     },
     onModeChange: (mode: any) => {
       console.log('🎤 Mode changed:', mode);
@@ -485,16 +564,73 @@ export default function ElevenLabsAgent({
   };
 
   const handleConnect = () => {
+    if (!apiKey.trim()) {
+      toast.error('Please enter your ElevenLabs API key first');
+      setShowApiKeyInput(true);
+      return;
+    }
     setIsConnecting(true);
   };
 
-  if (!apiKey) {
+  // API Key Input Component
+  if (showApiKeyInput || !apiKey) {
     return (
-      <div className="flex items-center justify-center h-full bg-gradient-to-br from-slate-100 to-white">
-        <div className="text-center p-8">
-          <Crown className="w-16 h-16 text-amber-500 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-slate-800 mb-2">API Key Required</h3>
-          <p className="text-slate-600">Please add your ElevenLabs API key to use the AI concierge.</p>
+      <div className="flex items-center justify-center h-full bg-gradient-to-br from-slate-100 to-white p-8">
+        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 max-w-md w-full">
+          <div className="text-center mb-6">
+            <Crown className="w-16 h-16 text-amber-500 mx-auto mb-4" />
+            <h3 className="text-2xl font-semibold text-slate-800 mb-2 font-playfair">ElevenLabs API Key</h3>
+            <p className="text-slate-600 text-sm">Enter your API key to activate the AI concierge</p>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="relative">
+              <input
+                type={showApiKey ? "text" : "password"}
+                value={tempApiKey}
+                onChange={(e) => setTempApiKey(e.target.value)}
+                placeholder="sk-..."
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors pr-12"
+                onKeyPress={(e) => e.key === 'Enter' && handleApiKeySubmit()}
+              />
+              <button
+                type="button"
+                onClick={() => setShowApiKey(!showApiKey)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                {showApiKey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+            
+            <button
+              onClick={handleApiKeySubmit}
+              disabled={!tempApiKey.trim()}
+              className="w-full bg-gradient-to-r from-amber-600 to-amber-500 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
+            >
+              <Key className="w-5 h-5" />
+              <span>Save API Key</span>
+            </button>
+            
+            <div className="text-center">
+              <a 
+                href="https://elevenlabs.io/app/speech-synthesis/text-to-speech" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-amber-600 hover:text-amber-700 text-sm underline"
+              >
+                Get your API key from ElevenLabs →
+              </a>
+            </div>
+            
+            {apiKey && (
+              <button
+                onClick={() => setShowApiKeyInput(false)}
+                className="w-full text-slate-600 hover:text-slate-800 text-sm py-2"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -504,7 +640,7 @@ export default function ElevenLabsAgent({
     <div className="flex flex-col h-full bg-gradient-to-br from-slate-50 to-white">
       {/* Agent Mode Switch */}
       <div className="p-4 border-b border-slate-200 bg-white/80 backdrop-blur-sm">
-        <div className="flex items-center justify-center space-x-4">
+        <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             {/* Mr Hyde Option */}
             <button
@@ -545,6 +681,15 @@ export default function ElevenLabsAgent({
               <span className="font-medium">Dr Jekyll</span>
             </button>
           </div>
+          
+          {/* API Key Management */}
+          <button
+            onClick={() => setShowApiKeyInput(true)}
+            className="flex items-center space-x-2 px-3 py-2 text-slate-600 hover:text-slate-800 transition-colors text-sm"
+          >
+            <Key className="w-4 h-4" />
+            <span>API Key</span>
+          </button>
         </div>
       </div>
 
@@ -627,26 +772,28 @@ export default function ElevenLabsAgent({
           </div>
         </div>
 
-        {/* Product Recommendations */}
+        {/* Product Recommendations - Extended Size */}
         {recommendedProducts.length > 0 && (
-          <div className="p-4 border-t border-slate-200 bg-slate-50">
-            <div className="mb-3">
-              <h4 className={`font-semibold ${currentAgent.colors.accent} flex items-center`}>
-                <Sparkles className="w-4 h-4 mr-2" />
+          <div className="p-6 border-t border-slate-200 bg-slate-50">
+            <div className="mb-4">
+              <h4 className={`font-semibold ${currentAgent.colors.accent} flex items-center text-lg`}>
+                <Sparkles className="w-5 h-5 mr-2" />
                 Recommended by {currentAgent.name}
               </h4>
             </div>
-            <RecommendedProducts 
-              products={recommendedProducts}
-              onRemove={removeProduct}
-              onClearAll={clearProducts}
-            />
+            <div className="max-w-4xl mx-auto">
+              <RecommendedProducts 
+                products={recommendedProducts}
+                onRemove={removeProduct}
+                onClearAll={clearProducts}
+              />
+            </div>
           </div>
         )}
       </div>
 
       {/* ElevenLabs Widget */}
-      {isConnected && (
+      {isConnected && apiKey && (
         <div className="absolute inset-0 pointer-events-none">
           <ElevenLabsConversationalAI
             agentId={currentAgentId}
