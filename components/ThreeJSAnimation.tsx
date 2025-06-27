@@ -57,16 +57,16 @@ const ThreeJSAnimation: React.FC<ThreeJSAnimationProps> = ({
     // Define color schemes based on mode
     const colorSchemes = {
       MR_HYDE: {
-        colorA: '#f59e0b', // amber-500
-        colorB: '#d97706', // amber-600
-        colorC: '#92400e', // amber-800
-        listeningTint: new THREE.Color(0.8, 0.2, 0.2) // Red tint for Hyde
+        colorA: '#dc2626', // red-600
+        colorB: '#ef4444', // red-500
+        colorC: '#991b1b', // red-800
+        listeningTint: new THREE.Color(1.0, 0.2, 0.2) // Bright red tint for Hyde
       },
       DR_JEKYLL: {
-        colorA: '#10b981', // emerald-500
-        colorB: '#059669', // emerald-600
-        colorC: '#065f46', // emerald-800
-        listeningTint: new THREE.Color(0.2, 0.8, 0.4) // Green tint for Jekyll
+        colorA: '#059669', // emerald-600
+        colorB: '#10b981', // emerald-500
+        colorC: '#064e3b', // emerald-900
+        listeningTint: new THREE.Color(0.2, 1.0, 0.4) // Bright green tint for Jekyll
       }
     };
 
@@ -127,23 +127,26 @@ const ThreeJSAnimation: React.FC<ThreeJSAnimationProps> = ({
           float segmentProgress = fract(normalizedAngle * segments);
           
           // Base rotation animation
-          float rotationSpeed = isSpeaking > 0.5 ? 2.0 : 0.5;
+          float rotationSpeed = isSpeaking > 0.5 ? 3.0 : (isConnecting > 0.5 ? 1.5 : 0.8);
           float animatedAngle = normalizedAngle + time * rotationSpeed;
           
           // Create pulsing segments when speaking
           float pulse = 1.0;
           if (isSpeaking > 0.5) {
             // Create multiple frequency pulses for speaking animation
-            float freq1 = sin(time * 8.0 + segmentIndex * 0.5) * 0.3 + 0.7;
-            float freq2 = sin(time * 12.0 + segmentIndex * 0.8) * 0.2 + 0.8;
-            float freq3 = sin(time * 6.0 + segmentIndex * 1.2) * 0.25 + 0.75;
+            float freq1 = sin(time * 10.0 + segmentIndex * 0.5) * 0.4 + 0.6;
+            float freq2 = sin(time * 15.0 + segmentIndex * 0.8) * 0.3 + 0.7;
+            float freq3 = sin(time * 8.0 + segmentIndex * 1.2) * 0.35 + 0.65;
             pulse = (freq1 + freq2 + freq3) / 3.0;
             
             // Add some randomness to segments
-            pulse *= (sin(segmentIndex * 2.5 + time * 4.0) * 0.2 + 0.8);
+            pulse *= (sin(segmentIndex * 2.5 + time * 5.0) * 0.3 + 0.7);
           } else if (isConnecting > 0.5) {
             // Gentle pulse when connecting
-            pulse = sin(time * 2.0) * 0.2 + 0.8;
+            pulse = sin(time * 3.0) * 0.3 + 0.7;
+          } else if (isListening > 0.5) {
+            // Steady bright pulse when listening
+            pulse = sin(time * 4.0) * 0.2 + 0.9;
           }
           
           // Create color based on angle and animation
@@ -153,7 +156,9 @@ const ThreeJSAnimation: React.FC<ThreeJSAnimationProps> = ({
           
           // Apply listening state tint based on mode
           if (isListening > 0.5) {
-            baseColor = mix(baseColor, listeningTint, 0.4);
+            baseColor = mix(baseColor, listeningTint, 0.5);
+            // Add extra brightness when listening
+            baseColor *= 1.3;
           }
           
           // Apply pulse effect
@@ -162,13 +167,21 @@ const ThreeJSAnimation: React.FC<ThreeJSAnimationProps> = ({
           // Add radial gradient for depth
           float distanceFromCenter = length(pos);
           float radialGradient = smoothstep(0.3, 0.8, distanceFromCenter);
-          finalColor *= (0.7 + radialGradient * 0.3);
+          finalColor *= (0.6 + radialGradient * 0.4);
           
           // Add some shimmer effect
-          float shimmer = sin(animatedAngle * 20.0 + time * 3.0) * 0.1 + 0.9;
+          float shimmer = sin(animatedAngle * 20.0 + time * 4.0) * 0.15 + 0.85;
           finalColor *= shimmer;
           
-          gl_FragColor = vec4(finalColor, opacity * pulse);
+          // Enhance opacity based on state
+          float finalOpacity = opacity;
+          if (isSpeaking > 0.5) {
+            finalOpacity *= (pulse * 0.3 + 0.7);
+          } else if (isListening > 0.5) {
+            finalOpacity *= 1.1;
+          }
+          
+          gl_FragColor = vec4(finalColor, finalOpacity);
         }
       `,
       transparent: true,
@@ -197,10 +210,13 @@ const ThreeJSAnimation: React.FC<ThreeJSAnimationProps> = ({
       
       // Gentle rotation
       if (mesh) {
-        mesh.rotation.z += isSpeaking ? 0.02 : 0.005;
+        mesh.rotation.z += isSpeaking ? 0.03 : (isConnecting ? 0.015 : 0.008);
         
-        // Subtle scale animation when speaking
+        // Subtle scale animation when speaking or listening
         if (isSpeaking) {
+          const scaleVariation = 1 + Math.sin(Date.now() * 0.012) * 0.05;
+          mesh.scale.setScalar(scaleVariation);
+        } else if (isListening) {
           const scaleVariation = 1 + Math.sin(Date.now() * 0.008) * 0.03;
           mesh.scale.setScalar(scaleVariation);
         } else {
@@ -228,7 +244,7 @@ const ThreeJSAnimation: React.FC<ThreeJSAnimationProps> = ({
       material.dispose();
       renderer.dispose();
     };
-  }, [size]);
+  }, [size, mode]); // Added mode to dependencies
 
   // Update uniforms when props change
   useEffect(() => {
@@ -236,13 +252,35 @@ const ThreeJSAnimation: React.FC<ThreeJSAnimationProps> = ({
       materialRef.current.uniforms.isListening.value = isListening ? 1.0 : 0.0;
       materialRef.current.uniforms.isSpeaking.value = isSpeaking ? 1.0 : 0.0;
       materialRef.current.uniforms.isConnecting.value = isConnecting ? 1.0 : 0.0;
+      
+      // Update colors when mode changes
+      const colorSchemes = {
+        MR_HYDE: {
+          colorA: '#dc2626', // red-600
+          colorB: '#ef4444', // red-500
+          colorC: '#991b1b', // red-800
+          listeningTint: new THREE.Color(1.0, 0.2, 0.2)
+        },
+        DR_JEKYLL: {
+          colorA: '#059669', // emerald-600
+          colorB: '#10b981', // emerald-500
+          colorC: '#064e3b', // emerald-900
+          listeningTint: new THREE.Color(0.2, 1.0, 0.4)
+        }
+      };
+      
+      const colors = colorSchemes[mode];
+      materialRef.current.uniforms.colorA.value = new THREE.Color(colors.colorA);
+      materialRef.current.uniforms.colorB.value = new THREE.Color(colors.colorB);
+      materialRef.current.uniforms.colorC.value = new THREE.Color(colors.colorC);
+      materialRef.current.uniforms.listeningTint.value = colors.listeningTint;
     }
-  }, [isListening, isSpeaking, isConnecting]);
+  }, [isListening, isSpeaking, isConnecting, mode]);
 
   return (
     <div 
       ref={mountRef} 
-      className="flex items-center justify-center"
+      className="flex items-center justify-center mx-auto"
       style={{ width: size, height: size }}
     />
   );

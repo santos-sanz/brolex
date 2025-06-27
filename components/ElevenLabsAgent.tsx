@@ -69,12 +69,16 @@ export default function ElevenLabsAgent({
   const [isMuted, setIsMuted] = useState(false);
   const [agentMode, setAgentMode] = useState<AgentMode>('MR_HYDE');
   const [isConnecting, setIsConnecting] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   
   // API Key management
   const [apiKey, setApiKey] = useState(initialApiKey || '');
   const [showApiKeyInput, setShowApiKeyInput] = useState(!initialApiKey);
   const [showApiKey, setShowApiKey] = useState(false);
   const [tempApiKey, setTempApiKey] = useState('');
+  
+  // ElevenLabs widget ref for proper initialization
+  const widgetRef = useRef<any>(null);
   
   const { 
     state, 
@@ -114,6 +118,7 @@ export default function ElevenLabsAgent({
       setApiKey(tempApiKey.trim());
       setShowApiKeyInput(false);
       localStorage.setItem('elevenlabs-api-key', tempApiKey.trim());
+      setConnectionError(null);
       toast.success('API Key saved successfully! 🔑', {
         icon: '✅',
       });
@@ -141,6 +146,7 @@ export default function ElevenLabsAgent({
     }
     
     setAgentMode(newMode);
+    setConnectionError(null);
     const newAgent = AGENTS[newMode];
     
     if (newMode === 'MR_HYDE') {
@@ -453,6 +459,7 @@ export default function ElevenLabsAgent({
       console.log('🔗 Connected to ElevenLabs');
       setIsConnected(true);
       setIsConnecting(false);
+      setConnectionError(null);
       
       // Agent-specific connection messages
       if (agentMode === 'MR_HYDE') {
@@ -502,7 +509,17 @@ export default function ElevenLabsAgent({
     onError: (error: any) => {
       console.error('❌ ElevenLabs error:', error);
       setIsConnecting(false);
-      toast.error('Connection failed. Please check your API key and try again.');
+      setConnectionError(error?.message || 'Connection failed');
+      
+      // More specific error handling
+      if (error?.message?.includes('API key')) {
+        toast.error('Invalid API key. Please check your credentials.');
+        setShowApiKeyInput(true);
+      } else if (error?.message?.includes('agent')) {
+        toast.error('Agent not found. Please check the agent ID.');
+      } else {
+        toast.error('Connection failed. Please try again.');
+      }
     },
     onModeChange: (mode: any) => {
       console.log('🎤 Mode changed:', mode);
@@ -570,6 +587,7 @@ export default function ElevenLabsAgent({
       return;
     }
     setIsConnecting(true);
+    setConnectionError(null);
   };
 
   // API Key Input Component
@@ -714,14 +732,22 @@ export default function ElevenLabsAgent({
         <div className="p-6 bg-white border-b border-slate-200">
           <div className="flex items-center justify-center space-x-4">
             {!isConnected ? (
-              <button
-                onClick={handleConnect}
-                disabled={isConnecting}
-                className={`flex items-center space-x-2 px-6 py-3 bg-gradient-to-r ${currentAgent.colors.primary} text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                <currentAgent.icon className="w-5 h-5" />
-                <span>{isConnecting ? 'Connecting...' : `Connect to ${currentAgent.name}`}</span>
-              </button>
+              <div className="text-center space-y-4">
+                <button
+                  onClick={handleConnect}
+                  disabled={isConnecting}
+                  className={`flex items-center space-x-2 px-6 py-3 bg-gradient-to-r ${currentAgent.colors.primary} text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  <currentAgent.icon className="w-5 h-5" />
+                  <span>{isConnecting ? 'Connecting...' : `Connect to ${currentAgent.name}`}</span>
+                </button>
+                
+                {connectionError && (
+                  <p className="text-red-600 text-sm">
+                    {connectionError}
+                  </p>
+                )}
+              </div>
             ) : (
               <div className="flex items-center space-x-4">
                 <button
@@ -745,10 +771,10 @@ export default function ElevenLabsAgent({
           </div>
         </div>
 
-        {/* Visualization */}
+        {/* Visualization - Centered */}
         <div className="flex-1 flex items-center justify-center p-8">
           <div className="text-center">
-            <div className="mb-6">
+            <div className="mb-6 flex justify-center">
               <ThreeJSAnimation 
                 isListening={isListening}
                 isSpeaking={isSpeaking}
@@ -792,12 +818,14 @@ export default function ElevenLabsAgent({
         )}
       </div>
 
-      {/* ElevenLabs Widget */}
+      {/* ElevenLabs Widget - Properly initialized */}
       {isConnected && apiKey && (
         <div className="absolute inset-0 pointer-events-none">
           <ElevenLabsConversationalAI
+            key={`${currentAgentId}-${apiKey}`} // Force re-initialization on agent/key change
             agentId={currentAgentId}
             apiKey={apiKey}
+            ref={widgetRef}
             {...conversationConfig}
           />
         </div>
