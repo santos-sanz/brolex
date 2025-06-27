@@ -593,11 +593,11 @@ export default function ElevenLabsAgent({
   // API Key Input Component
   if (showApiKeyInput || !apiKey) {
     return (
-      <div className="flex items-center justify-center h-full bg-gradient-to-br from-slate-100 to-white p-8">
-        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 max-w-md w-full">
+      <div className="flex items-center justify-center h-full bg-gradient-to-br from-slate-100 to-white p-4 sm:p-8">
+        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 sm:p-8 max-w-md w-full mx-4">
           <div className="text-center mb-6">
-            <Crown className="w-16 h-16 text-amber-500 mx-auto mb-4" />
-            <h3 className="text-2xl font-semibold text-slate-800 mb-2 font-playfair">ElevenLabs API Key</h3>
+            <Crown className="w-12 h-12 sm:w-16 sm:h-16 text-amber-500 mx-auto mb-4" />
+            <h3 className="text-xl sm:text-2xl font-semibold text-slate-800 mb-2 font-playfair">ElevenLabs API Key</h3>
             <p className="text-slate-600 text-sm">Enter your API key to activate the AI concierge</p>
           </div>
           
@@ -608,7 +608,7 @@ export default function ElevenLabsAgent({
                 value={tempApiKey}
                 onChange={(e) => setTempApiKey(e.target.value)}
                 placeholder="sk-..."
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors pr-12"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors pr-12 text-sm"
                 onKeyPress={(e) => e.key === 'Enter' && handleApiKeySubmit()}
               />
               <button
@@ -656,31 +656,31 @@ export default function ElevenLabsAgent({
 
   return (
     <div className="flex flex-col h-full bg-gradient-to-br from-slate-50 to-white">
-      {/* Agent Mode Switch */}
-      <div className="p-4 border-b border-slate-200 bg-white/80 backdrop-blur-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+      {/* Agent Mode Switch - Mobile Responsive */}
+      <div className="p-3 sm:p-4 border-b border-slate-200 bg-white/80 backdrop-blur-sm">
+        <div className="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
+          <div className="flex items-center space-x-2 sm:space-x-3 w-full sm:w-auto justify-center sm:justify-start">
             {/* Mr Hyde Option */}
             <button
               onClick={() => handleAgentSwitch('MR_HYDE')}
               disabled={isConnected}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-full transition-all duration-300 ${
+              className={`flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 rounded-full transition-all duration-300 text-sm sm:text-base ${
                 agentMode === 'MR_HYDE'
                   ? 'bg-gradient-to-r from-red-600 to-red-500 text-white shadow-lg'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               } ${isConnected ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             >
-              <Zap className="w-4 h-4" />
+              <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="font-medium">Mr Hyde</span>
             </button>
 
             {/* Toggle Visual */}
             <div className="relative">
-              <div className={`w-12 h-6 rounded-full transition-colors duration-300 ${
+              <div className={`w-10 h-5 sm:w-12 sm:h-6 rounded-full transition-colors duration-300 ${
                 agentMode === 'MR_HYDE' ? 'bg-red-500' : 'bg-emerald-500'
               }`}>
-                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 ${
-                  agentMode === 'MR_HYDE' ? 'left-1' : 'left-7'
+                <div className={`absolute top-0.5 sm:top-1 w-3 h-3 sm:w-4 sm:h-4 bg-white rounded-full transition-transform duration-300 ${
+                  agentMode === 'MR_HYDE' ? 'left-0.5 sm:left-1' : 'left-6 sm:left-7'
                 }`} />
               </div>
             </div>
@@ -689,13 +689,13 @@ export default function ElevenLabsAgent({
             <button
               onClick={() => handleAgentSwitch('DR_JEKYLL')}
               disabled={isConnected}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-full transition-all duration-300 ${
+              className={`flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 rounded-full transition-all duration-300 text-sm sm:text-base ${
                 agentMode === 'DR_JEKYLL'
                   ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-lg'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               } ${isConnected ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             >
-              <Heart className="w-4 h-4" />
+              <Heart className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="font-medium">Dr Jekyll</span>
             </button>
           </div>
@@ -711,39 +711,39 @@ export default function ElevenLabsAgent({
         </div>
       </div>
 
-      {/* Agent Header */}
-      <div className={`bg-gradient-to-r ${currentAgent.colors.primary} p-6 text-white relative overflow-hidden`}>
+      {/* Agent Header - Mobile Responsive */}
+      <div className={`bg-gradient-to-r ${currentAgent.colors.primary} p-4 sm:p-6 text-white relative overflow-hidden`}>
         <div className="absolute inset-0 bg-black bg-opacity-10"></div>
         <div className="relative text-center">
-          <div className="flex items-center justify-center mb-3">
-            <currentAgent.icon className="w-8 h-8 mr-3" />
+          <div className="flex items-center justify-center mb-2 sm:mb-3">
+            <currentAgent.icon className="w-6 h-6 sm:w-8 sm:h-8 mr-2 sm:mr-3" />
             <div>
-              <h2 className="text-2xl font-bold font-playfair">{currentAgent.name}</h2>
-              <p className="text-sm opacity-90">{currentAgent.title}</p>
+              <h2 className="text-xl sm:text-2xl font-bold font-playfair">{currentAgent.name}</h2>
+              <p className="text-xs sm:text-sm opacity-90">{currentAgent.title}</p>
             </div>
           </div>
-          <p className="text-sm opacity-80">{currentAgent.description}</p>
+          <p className="text-xs sm:text-sm opacity-80 px-4">{currentAgent.description}</p>
         </div>
       </div>
 
       {/* Main Agent Interface */}
       <div className="flex-1 flex flex-col">
-        {/* Connection Status & Controls */}
-        <div className="p-6 bg-white border-b border-slate-200">
+        {/* Connection Status & Controls - Mobile Responsive */}
+        <div className="p-4 sm:p-6 bg-white border-b border-slate-200">
           <div className="flex items-center justify-center space-x-4">
             {!isConnected ? (
-              <div className="text-center space-y-4">
+              <div className="text-center space-y-4 w-full">
                 <button
                   onClick={handleConnect}
                   disabled={isConnecting}
-                  className={`flex items-center space-x-2 px-6 py-3 bg-gradient-to-r ${currentAgent.colors.primary} text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className={`flex items-center space-x-2 px-4 sm:px-6 py-3 bg-gradient-to-r ${currentAgent.colors.primary} text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-lg mx-auto`}
                 >
-                  <currentAgent.icon className="w-5 h-5" />
+                  <currentAgent.icon className="w-4 h-4 sm:w-5 sm:h-5" />
                   <span>{isConnecting ? 'Connecting...' : `Connect to ${currentAgent.name}`}</span>
                 </button>
                 
                 {connectionError && (
-                  <p className="text-red-600 text-sm">
+                  <p className="text-red-600 text-sm px-4">
                     {connectionError}
                   </p>
                 )}
@@ -752,13 +752,13 @@ export default function ElevenLabsAgent({
               <div className="flex items-center space-x-4">
                 <button
                   onClick={() => setIsMuted(!isMuted)}
-                  className={`p-3 rounded-full transition-colors duration-200 ${
+                  className={`p-2 sm:p-3 rounded-full transition-colors duration-200 ${
                     isMuted 
                       ? 'bg-red-100 text-red-600 hover:bg-red-200' 
                       : `bg-slate-100 text-slate-600 hover:bg-slate-200`
                   }`}
                 >
-                  {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                  {isMuted ? <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" /> : <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />}
                 </button>
                 
                 <div className="text-center">
@@ -771,24 +771,24 @@ export default function ElevenLabsAgent({
           </div>
         </div>
 
-        {/* Visualization - Centered */}
-        <div className="flex-1 flex items-center justify-center p-8">
+        {/* Visualization - Centered and Mobile Responsive */}
+        <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
           <div className="text-center">
-            <div className="mb-6 flex justify-center">
+            <div className="mb-4 sm:mb-6 flex justify-center">
               <ThreeJSAnimation 
                 isListening={isListening}
                 isSpeaking={isSpeaking}
                 isConnecting={isConnecting}
-                size={200}
+                size={window.innerWidth < 640 ? 150 : 200}
                 mode={agentMode}
               />
             </div>
             
             <div className="space-y-2">
-              <h3 className={`text-xl font-semibold ${currentAgent.colors.accent} font-playfair`}>
+              <h3 className={`text-lg sm:text-xl font-semibold ${currentAgent.colors.accent} font-playfair`}>
                 {currentAgent.name} AI Concierge
               </h3>
-              <p className="text-slate-600 text-sm max-w-md">
+              <p className="text-slate-600 text-sm max-w-md px-4">
                 {isConnected 
                   ? `${currentAgent.name} is ready to assist with your luxury watch needs`
                   : `Connect to start your conversation with ${currentAgent.name}`
@@ -798,16 +798,16 @@ export default function ElevenLabsAgent({
           </div>
         </div>
 
-        {/* Product Recommendations - Extended Size */}
+        {/* Product Recommendations - Mobile Responsive */}
         {recommendedProducts.length > 0 && (
-          <div className="p-6 border-t border-slate-200 bg-slate-50">
+          <div className="p-4 sm:p-6 border-t border-slate-200 bg-slate-50">
             <div className="mb-4">
-              <h4 className={`font-semibold ${currentAgent.colors.accent} flex items-center text-lg`}>
-                <Sparkles className="w-5 h-5 mr-2" />
+              <h4 className={`font-semibold ${currentAgent.colors.accent} flex items-center text-base sm:text-lg`}>
+                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 Recommended by {currentAgent.name}
               </h4>
             </div>
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-6xl mx-auto">
               <RecommendedProducts 
                 products={recommendedProducts}
                 onRemove={removeProduct}

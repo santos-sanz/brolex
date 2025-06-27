@@ -48,20 +48,20 @@ export default function WatchCard({ watch }: WatchCardProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="group bg-gradient-to-br from-white via-slate-50 to-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden transform hover:scale-[1.02] border border-slate-200"
+      className="group bg-gradient-to-br from-white via-slate-50 to-white rounded-2xl sm:rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden transform hover:scale-[1.02] border border-slate-200"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Premium Badge */}
-      <div className="absolute top-4 left-4 z-10">
-        <div className="bg-gradient-to-r from-amber-600 to-amber-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center space-x-1 shadow-lg">
-          <Crown className="w-3 h-3" />
+      <div className="absolute top-3 sm:top-4 left-3 sm:left-4 z-10">
+        <div className="bg-gradient-to-r from-amber-600 to-amber-500 text-white px-2 sm:px-3 py-1 rounded-full text-xs font-semibold flex items-center space-x-1 shadow-lg">
+          <Crown className="w-2 h-2 sm:w-3 sm:h-3" />
           <span>LUXURY</span>
         </div>
       </div>
 
-      {/* Image Container */}
-      <div className="relative h-80 overflow-hidden bg-gradient-to-br from-slate-100 via-slate-50 to-slate-100">
+      {/* Image Container - Responsive Height */}
+      <div className="relative h-64 sm:h-80 overflow-hidden bg-gradient-to-br from-slate-100 via-slate-50 to-slate-100">
         <Image
           src={watch.image}
           alt={watch.name}
@@ -84,20 +84,20 @@ export default function WatchCard({ watch }: WatchCardProps) {
         {/* Like button */}
         <button
           onClick={handleLike}
-          className="absolute top-4 right-4 p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all duration-200 transform hover:scale-110 border border-slate-200"
+          className="absolute top-3 sm:top-4 right-3 sm:right-4 p-2 sm:p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all duration-200 transform hover:scale-110 border border-slate-200"
         >
           <Heart 
-            className={`w-5 h-5 transition-colors duration-200 ${
+            className={`w-4 h-4 sm:w-5 sm:h-5 transition-colors duration-200 ${
               isLiked ? 'text-red-500 fill-current' : 'text-slate-600'
             }`} 
           />
         </button>
       </div>
 
-      {/* Content */}
-      <div className="p-6 bg-gradient-to-b from-white to-slate-50">
-        <div className="mb-4">
-          <h3 className="text-2xl font-bold text-slate-900 mb-2 font-playfair">
+      {/* Content - Mobile Responsive Padding */}
+      <div className="p-4 sm:p-6 bg-gradient-to-b from-white to-slate-50">
+        <div className="mb-3 sm:mb-4">
+          <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 font-playfair">
             {watch.name}
           </h3>
           <p className="text-slate-600 text-sm italic leading-relaxed">
@@ -105,26 +105,26 @@ export default function WatchCard({ watch }: WatchCardProps) {
           </p>
         </div>
 
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
           <div>
-            <span className="text-3xl font-bold text-slate-900 font-playfair">
+            <span className="text-2xl sm:text-3xl font-bold text-slate-900 font-playfair">
               {formatPrice(watch.price)}
             </span>
           </div>
         </div>
 
-        {/* Action Button */}
+        {/* Action Button - Mobile Responsive */}
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleAddToCart}
-          className="w-full bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white font-semibold py-4 px-6 rounded-2xl shadow-lg hover:shadow-xl transform transition-all duration-300 flex items-center justify-center space-x-2 border border-slate-700"
+          className="w-full bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl transform transition-all duration-300 flex items-center justify-center space-x-2 border border-slate-700 text-sm sm:text-base"
         >
-          <ShoppingCart className="w-5 h-5" />
+          <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
           <span>Add to Collection</span>
         </motion.button>
         
-        <div className="mt-4 text-center">
+        <div className="mt-3 sm:mt-4 text-center">
           <p className="text-xs text-slate-500">
             Free shipping to your dreams ✨
           </p>
