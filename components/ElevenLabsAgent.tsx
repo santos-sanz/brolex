@@ -23,14 +23,14 @@ import { useProductDisplayTool, RecommendedProduct } from '../utils/productDispl
 import RecommendedProducts from './RecommendedProducts';
 import ThreeJSAnimation from './ThreeJSAnimation';
 
-// Agent configuration with fallback icons
+// Agent configuration with proper icon handling
 const AGENTS = {
   MR_HYDE: {
     id: 'agent_01jybb45c6fcwapkfyh35etnqa',
     name: 'Mr Hyde',
     title: 'Luxury Sales Demon',
     description: 'Aggressive, persuasive, and slightly unhinged',
-    icon: Zap || (() => <span>⚡</span>),
+    icon: Zap,
     colors: {
       primary: 'from-red-600 to-red-500',
       secondary: 'from-red-900 via-red-800 to-red-900',
@@ -45,7 +45,7 @@ const AGENTS = {
     name: 'Dr Jekyll',
     title: 'Refined Watch Curator',
     description: 'Sophisticated, gentle, and genuinely helpful',
-    icon: Heart || (() => <span>💚</span>),
+    icon: Heart,
     colors: {
       primary: 'from-emerald-600 to-emerald-500',
       secondary: 'from-emerald-900 via-emerald-800 to-emerald-900',
