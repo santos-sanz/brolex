@@ -25,9 +25,9 @@ import ThreeJSAnimation from './ThreeJSAnimation';
 
 // Agent configuration with proper icon handling
 const AGENTS = {
-  MR_HYDE: {
+  HYDE: {
     id: 'agent_01jybb45c6fcwapkfyh35etnqa',
-    name: 'Mr Hyde',
+    name: 'Hyde',
     title: 'Luxury Sales Demon',
     description: 'Aggressive, persuasive, and slightly unhinged',
     icon: Zap,
@@ -40,9 +40,9 @@ const AGENTS = {
       glow: 'shadow-red-500/25'
     }
   },
-  DR_JEKYLL: {
+  JEKYLL: {
     id: 'agent_01jynk52vgepatyn037bfcv2ee',
-    name: 'Dr Jekyll',
+    name: 'Jekyll',
     title: 'Refined Watch Curator',
     description: 'Sophisticated, gentle, and genuinely helpful',
     icon: Heart,
@@ -57,7 +57,7 @@ const AGENTS = {
   }
 };
 
-type AgentMode = 'MR_HYDE' | 'DR_JEKYLL';
+type AgentMode = 'HYDE' | 'JEKYLL';
 
 interface ElevenLabsAgentProps {
   agentId: string;
@@ -79,7 +79,7 @@ export default function ElevenLabsAgent({
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [agentMode, setAgentMode] = useState<AgentMode>('MR_HYDE');
+  const [agentMode, setAgentMode] = useState<AgentMode>('HYDE');
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   
@@ -183,8 +183,8 @@ export default function ElevenLabsAgent({
     setConnectionError(null);
     const newAgent = AGENTS[newMode];
     
-    if (newMode === 'MR_HYDE') {
-      toast.success('🔥 Mr Hyde activated! Prepare for aggressive luxury sales!', {
+    if (newMode === 'HYDE') {
+      toast.success('🔥 Hyde activated! Prepare for aggressive luxury sales!', {
         icon: '⚡',
         style: {
           background: '#dc2626',
@@ -192,7 +192,7 @@ export default function ElevenLabsAgent({
         },
       });
     } else {
-      toast.success('💚 Dr Jekyll activated! Refined curation at your service.', {
+      toast.success('💚 Jekyll activated! Refined curation at your service.', {
         icon: '💚',
         style: {
           background: '#059669',
@@ -216,7 +216,7 @@ export default function ElevenLabsAgent({
         addItem(product);
         
         // Agent-specific responses
-        if (agentMode === 'MR_HYDE') {
+        if (agentMode === 'HYDE') {
           toast.success(`BOOM! ${product.name} SMASHED into your collection! 💥`, {
             icon: '⚡',
             duration: 4000,
@@ -256,7 +256,7 @@ export default function ElevenLabsAgent({
       removeItem(productId);
       
       // Agent-specific responses
-      if (agentMode === 'MR_HYDE') {
+      if (agentMode === 'HYDE') {
         toast.success(`DESTROYED! ${productName} BANISHED from your collection! 💀`, {
           icon: '💥',
           style: {
@@ -293,7 +293,7 @@ export default function ElevenLabsAgent({
       updateQuantity(productId, quantity);
       
       // Agent-specific responses
-      if (agentMode === 'MR_HYDE') {
+      if (agentMode === 'HYDE') {
         if (quantity === 0) {
           toast.success(`OBLITERATED! ${productName} quantity set to ZERO! 💥`, {
             icon: '💀',
@@ -341,7 +341,7 @@ export default function ElevenLabsAgent({
     openCart();
     
     // Agent-specific responses
-    if (agentMode === 'MR_HYDE') {
+    if (agentMode === 'HYDE') {
       toast.success('CART UNLEASHED! Behold your items of DESTRUCTION! 💀', {
         icon: '🛒',
         style: {
@@ -365,7 +365,7 @@ export default function ElevenLabsAgent({
     closeCart();
     
     // Agent-specific responses
-    if (agentMode === 'MR_HYDE') {
+    if (agentMode === 'HYDE') {
       toast.success('Cart BANISHED to the shadow realm! 👻', {
         icon: '🌑',
         style: {
@@ -392,7 +392,7 @@ export default function ElevenLabsAgent({
     
     if (hasInsurance) {
       // Agent-specific responses for existing insurance
-      if (agentMode === 'MR_HYDE') {
+      if (agentMode === 'HYDE') {
         toast.error('INSURANCE ALREADY DEPLOYED! Your watches are IMMORTAL! 🔥⚡', {
           icon: '🛡️',
           style: {
@@ -415,7 +415,7 @@ export default function ElevenLabsAgent({
     addInsurance();
     
     // Agent-specific responses
-    if (agentMode === 'MR_HYDE') {
+    if (agentMode === 'HYDE') {
       toast.success('ULTIMATE PROTECTION UNLEASHED! Your watches are now IMMORTAL! 🔥⚡', {
         icon: '🛡️',
         duration: 5000,
@@ -448,7 +448,7 @@ export default function ElevenLabsAgent({
       removeItem(insuranceItem.id);
       
       // Agent-specific responses
-      if (agentMode === 'MR_HYDE') {
+      if (agentMode === 'HYDE') {
         toast.success('INSURANCE OBLITERATED! Your watches are now VULNERABLE! 💀⚡', {
           icon: '💥',
           style: {
@@ -468,7 +468,7 @@ export default function ElevenLabsAgent({
       return 'Insurance removed successfully';
     } else {
       // Agent-specific responses for no insurance
-      if (agentMode === 'MR_HYDE') {
+      if (agentMode === 'HYDE') {
         toast.error('NO INSURANCE TO DESTROY! Your watches remain UNPROTECTED! 😈', {
           icon: '⚠️',
           style: {
@@ -506,25 +506,17 @@ export default function ElevenLabsAgent({
       const existingProduct = productsData.find((p: any) => p.id === productId);
       
       if (existingProduct) {
-        // Use existing product data
-        if (onShowProductCard) {
-          onShowProductCard({
-            productId: existingProduct.id,
-            name: existingProduct.name,
-            price: existingProduct.price.toString(),
-            image: existingProduct.image,
-            description: existingProduct.description
-          });
-        } else {
-          handleProductDisplay({
-            productId: existingProduct.id,
-            name: existingProduct.name,
-            price: existingProduct.price.toString(),
-            image: existingProduct.image,
-            description: existingProduct.description
-          });
-        }
+        console.log('✅ Found existing product:', existingProduct.name);
+        // Use existing product data and display it
+        handleProductDisplay({
+          productId: existingProduct.id,
+          name: existingProduct.name,
+          price: existingProduct.price.toString(),
+          image: existingProduct.image,
+          description: existingProduct.description
+        });
       } else {
+        console.log('⚠️ Product not found in data, creating from parameters');
         // Create product from agent parameters
         const productData = {
           productId: productId,
@@ -534,11 +526,26 @@ export default function ElevenLabsAgent({
           description: parameters.description || parameters.tagline || ''
         };
         
-        if (onShowProductCard) {
-          onShowProductCard(productData);
-        } else {
-          handleProductDisplay(productData);
-        }
+        handleProductDisplay(productData);
+      }
+      
+      // Show success toast
+      if (agentMode === 'HYDE') {
+        toast.success(`PRODUCT CARD UNLEASHED! Behold ${parameters.name}! 💥`, {
+          icon: '🎯',
+          style: {
+            background: '#dc2626',
+            color: '#ffffff',
+          },
+        });
+      } else {
+        toast.success(`Product card displayed: ${parameters.name} 🌟`, {
+          icon: '🎯',
+          style: {
+            background: '#059669',
+            color: '#ffffff',
+          },
+        });
       }
       
       return 'Product card displayed successfully';
@@ -623,8 +630,8 @@ export default function ElevenLabsAgent({
       setConnectionError(null);
       
       // Agent-specific connection messages
-      if (agentMode === 'MR_HYDE') {
-        toast.success('🔥 Mr Hyde is ONLINE! Ready to DOMINATE luxury sales!', {
+      if (agentMode === 'HYDE') {
+        toast.success('🔥 Hyde is ONLINE! Ready to DOMINATE luxury sales!', {
           icon: '⚡',
           style: {
             background: '#dc2626',
@@ -632,7 +639,7 @@ export default function ElevenLabsAgent({
           },
         });
       } else {
-        toast.success('💚 Dr Jekyll connected gracefully. How may I assist you today?', {
+        toast.success('💚 Jekyll connected gracefully. How may I assist you today?', {
           icon: '🌟',
           style: {
             background: '#059669',
@@ -648,8 +655,8 @@ export default function ElevenLabsAgent({
       setIsConnecting(false);
       
       // Agent-specific disconnection messages
-      if (agentMode === 'MR_HYDE') {
-        toast.error('💀 Mr Hyde has VANISHED into the shadows!', {
+      if (agentMode === 'HYDE') {
+        toast.error('💀 Hyde has VANISHED into the shadows!', {
           icon: '👻',
           style: {
             background: '#dc2626',
@@ -657,7 +664,7 @@ export default function ElevenLabsAgent({
           },
         });
       } else {
-        toast.info('🌙 Dr Jekyll has retired for the evening. Thank you!', {
+        toast.info('🌙 Jekyll has retired for the evening. Thank you!', {
           icon: '💤',
           style: {
             background: '#059669',
@@ -774,6 +781,15 @@ export default function ElevenLabsAgent({
     }
   };
 
+  // Handle clicking the circle to connect/disconnect
+  const handleCircleClick = () => {
+    if (conversation.status === 'connected') {
+      handleDisconnect();
+    } else {
+      handleConnect();
+    }
+  };
+
   // API Key Input Component
   if (showApiKeyInput && !apiKey) {
     return (
@@ -847,43 +863,43 @@ export default function ElevenLabsAgent({
       <div className="p-3 sm:p-4 border-b border-slate-200 bg-white/80 backdrop-blur-sm">
         <div className="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
           <div className="flex items-center space-x-2 sm:space-x-3 w-full sm:w-auto justify-center sm:justify-start">
-            {/* Mr Hyde Option */}
+            {/* Hyde Option */}
             <button
-              onClick={() => handleAgentSwitch('MR_HYDE')}
+              onClick={() => handleAgentSwitch('HYDE')}
               disabled={conversation.status === 'connected'}
               className={`flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 rounded-full transition-all duration-300 text-sm sm:text-base ${
-                agentMode === 'MR_HYDE'
+                agentMode === 'HYDE'
                   ? 'bg-gradient-to-r from-red-600 to-red-500 text-white shadow-lg'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               } ${conversation.status === 'connected' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             >
               <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="font-medium">Mr Hyde</span>
+              <span className="font-medium">Hyde</span>
             </button>
 
             {/* Toggle Visual */}
             <div className="relative">
               <div className={`w-10 h-5 sm:w-12 sm:h-6 rounded-full transition-colors duration-300 ${
-                agentMode === 'MR_HYDE' ? 'bg-red-500' : 'bg-emerald-500'
+                agentMode === 'HYDE' ? 'bg-red-500' : 'bg-emerald-500'
               }`}>
                 <div className={`absolute top-0.5 sm:top-1 w-3 h-3 sm:w-4 sm:h-4 bg-white rounded-full transition-transform duration-300 ${
-                  agentMode === 'MR_HYDE' ? 'left-0.5 sm:left-1' : 'left-6 sm:left-7'
+                  agentMode === 'HYDE' ? 'left-0.5 sm:left-1' : 'left-6 sm:left-7'
                 }`} />
               </div>
             </div>
 
-            {/* Dr Jekyll Option */}
+            {/* Jekyll Option */}
             <button
-              onClick={() => handleAgentSwitch('DR_JEKYLL')}
+              onClick={() => handleAgentSwitch('JEKYLL')}
               disabled={conversation.status === 'connected'}
               className={`flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 rounded-full transition-all duration-300 text-sm sm:text-base ${
-                agentMode === 'DR_JEKYLL'
+                agentMode === 'JEKYLL'
                   ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-lg'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               } ${conversation.status === 'connected' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             >
               <Heart className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="font-medium">Dr Jekyll</span>
+              <span className="font-medium">Jekyll</span>
             </button>
           </div>
           
@@ -925,72 +941,22 @@ export default function ElevenLabsAgent({
 
       {/* Main Agent Interface */}
       <div className="flex-1 flex flex-col">
-        {/* Connection Status & Controls - Mobile Responsive */}
-        <div className="p-4 sm:p-6 bg-white border-b border-slate-200">
-          <div className="flex items-center justify-center space-x-4">
-            {conversation.status !== 'connected' ? (
-              <div className="text-center space-y-4 w-full">
-                <button
-                  onClick={handleConnect}
-                  disabled={isConnecting || !apiKey}
-                  className={`flex items-center space-x-2 px-4 sm:px-6 py-3 bg-gradient-to-r ${currentAgent.colors.primary} text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-lg mx-auto`}
-                >
-                  <currentAgent.icon className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span>{isConnecting ? 'Connecting...' : `Connect to ${currentAgent.name}`}</span>
-                </button>
-                
-                {connectionError && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                    <p className="text-red-600 text-sm">
-                      <strong>Connection Error:</strong> {connectionError}
-                    </p>
-                    <p className="text-red-500 text-xs mt-1">
-                      Please check your API key and try again.
-                    </p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={() => setIsMuted(!isMuted)}
-                  className={`p-2 sm:p-3 rounded-full transition-colors duration-200 ${
-                    isMuted 
-                      ? 'bg-red-100 text-red-600 hover:bg-red-200' 
-                      : `bg-slate-100 text-slate-600 hover:bg-slate-200`
-                  }`}
-                >
-                  {isMuted ? <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" /> : <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />}
-                </button>
-                
-                <div className="text-center">
-                  <div className={`text-sm font-medium ${currentAgent.colors.accent}`}>
-                    {isListening ? 'Listening...' : isSpeaking ? 'Speaking...' : 'Connected'}
-                  </div>
-                </div>
-                
-                <button
-                  onClick={handleDisconnect}
-                  className="px-3 py-2 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-full text-sm transition-colors"
-                >
-                  Disconnect
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Visualization - Centered and Mobile Responsive */}
+        {/* Visualization - Centered and Mobile Responsive with Click to Connect */}
         <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
           <div className="text-center">
             <div className="mb-4 sm:mb-6 flex justify-center">
-              <ThreeJSAnimation 
-                isListening={isListening}
-                isSpeaking={isSpeaking}
-                isConnecting={isConnecting}
-                size={typeof window !== 'undefined' && window.innerWidth < 640 ? 150 : 200}
-                mode={agentMode}
-              />
+              <div 
+                onClick={handleCircleClick}
+                className="cursor-pointer transform hover:scale-105 transition-all duration-300"
+              >
+                <ThreeJSAnimation 
+                  isListening={isListening}
+                  isSpeaking={isSpeaking}
+                  isConnecting={isConnecting}
+                  size={typeof window !== 'undefined' && window.innerWidth < 640 ? 150 : 200}
+                  mode={agentMode}
+                />
+              </div>
             </div>
             
             <div className="space-y-2">
@@ -1000,9 +966,45 @@ export default function ElevenLabsAgent({
               <p className="text-slate-600 text-sm max-w-md px-4">
                 {conversation.status === 'connected'
                   ? `${currentAgent.name} is ready to assist with your luxury watch needs`
-                  : `Connect to start your conversation with ${currentAgent.name}`
+                  : isConnecting
+                  ? 'Connecting...'
+                  : `Click the circle to start your conversation with ${currentAgent.name}`
                 }
               </p>
+              
+              {/* Connection Status */}
+              {conversation.status === 'connected' && (
+                <div className="flex items-center justify-center space-x-4 mt-4">
+                  <button
+                    onClick={() => setIsMuted(!isMuted)}
+                    className={`p-2 sm:p-3 rounded-full transition-colors duration-200 ${
+                      isMuted 
+                        ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+                        : `bg-slate-100 text-slate-600 hover:bg-slate-200`
+                    }`}
+                  >
+                    {isMuted ? <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" /> : <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />}
+                  </button>
+                  
+                  <div className="text-center">
+                    <div className={`text-sm font-medium ${currentAgent.colors.accent}`}>
+                      {isListening ? 'Listening...' : isSpeaking ? 'Speaking...' : 'Connected'}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Connection Error */}
+              {connectionError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-4 max-w-md mx-auto">
+                  <p className="text-red-600 text-sm">
+                    <strong>Connection Error:</strong> {connectionError}
+                  </p>
+                  <p className="text-red-500 text-xs mt-1">
+                    Please check your API key and try again.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>

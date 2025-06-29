@@ -8,7 +8,7 @@ interface ThreeJSAnimationProps {
   isSpeaking?: boolean;
   isConnecting?: boolean;
   size?: number;
-  mode?: 'MR_HYDE' | 'DR_JEKYLL';
+  mode?: 'HYDE' | 'JEKYLL';
 }
 
 const ThreeJSAnimation: React.FC<ThreeJSAnimationProps> = ({ 
@@ -16,7 +16,7 @@ const ThreeJSAnimation: React.FC<ThreeJSAnimationProps> = ({
   isSpeaking = false, 
   isConnecting = false,
   size = 200,
-  mode = 'MR_HYDE'
+  mode = 'HYDE'
 }) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene>();
@@ -56,13 +56,13 @@ const ThreeJSAnimation: React.FC<ThreeJSAnimationProps> = ({
 
     // Define color schemes based on mode
     const colorSchemes = {
-      MR_HYDE: {
+      HYDE: {
         colorA: '#dc2626', // red-600
         colorB: '#ef4444', // red-500
         colorC: '#991b1b', // red-800
         listeningTint: new THREE.Color(1.0, 0.2, 0.2) // Bright red tint for Hyde
       },
-      DR_JEKYLL: {
+      JEKYLL: {
         colorA: '#059669', // emerald-600
         colorB: '#10b981', // emerald-500
         colorC: '#064e3b', // emerald-900
@@ -255,13 +255,13 @@ const ThreeJSAnimation: React.FC<ThreeJSAnimationProps> = ({
       
       // Update colors when mode changes
       const colorSchemes = {
-        MR_HYDE: {
+        HYDE: {
           colorA: '#dc2626', // red-600
           colorB: '#ef4444', // red-500
           colorC: '#991b1b', // red-800
           listeningTint: new THREE.Color(1.0, 0.2, 0.2)
         },
-        DR_JEKYLL: {
+        JEKYLL: {
           colorA: '#059669', // emerald-600
           colorB: '#10b981', // emerald-500
           colorC: '#064e3b', // emerald-900
