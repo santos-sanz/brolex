@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { ElevenLabsConversationalAI } from '@elevenlabs/react';
+import ElevenLabsConversationalAI from '@elevenlabs/react';
 import { 
   Mic, 
   MicOff, 
