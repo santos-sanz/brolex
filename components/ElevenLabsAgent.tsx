@@ -2,7 +2,20 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { ElevenLabsConversationalAI } from '@elevenlabs/react';
-import { Mic, MicOff, Volume2, VolumeX, Zap, Heart, Crown, Shield, Sparkles, Key, Eye, EyeOff } from 'lucide-react';
+import { 
+  Mic, 
+  MicOff, 
+  Volume2, 
+  VolumeX, 
+  Zap, 
+  Heart, 
+  Crown, 
+  Shield, 
+  Sparkles, 
+  Key, 
+  Eye, 
+  EyeOff 
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useCart } from '../contexts/CartContext';
@@ -10,14 +23,14 @@ import { useProductDisplayTool, RecommendedProduct } from '../utils/productDispl
 import RecommendedProducts from './RecommendedProducts';
 import ThreeJSAnimation from './ThreeJSAnimation';
 
-// Agent configuration
+// Agent configuration with fallback icons
 const AGENTS = {
   MR_HYDE: {
     id: 'agent_01jybb45c6fcwapkfyh35etnqa',
     name: 'Mr Hyde',
     title: 'Luxury Sales Demon',
     description: 'Aggressive, persuasive, and slightly unhinged',
-    icon: Zap,
+    icon: Zap || (() => <span>⚡</span>),
     colors: {
       primary: 'from-red-600 to-red-500',
       secondary: 'from-red-900 via-red-800 to-red-900',
@@ -32,7 +45,7 @@ const AGENTS = {
     name: 'Dr Jekyll',
     title: 'Refined Watch Curator',
     description: 'Sophisticated, gentle, and genuinely helpful',
-    icon: Heart,
+    icon: Heart || (() => <span>💚</span>),
     colors: {
       primary: 'from-emerald-600 to-emerald-500',
       secondary: 'from-emerald-900 via-emerald-800 to-emerald-900',
@@ -612,13 +625,21 @@ export default function ElevenLabsAgent({
     setWidgetKey(prev => prev + 1); // Force widget re-render
   };
 
+  // Safe icon rendering function
+  const renderIcon = (IconComponent: any, fallback: string) => {
+    if (IconComponent && typeof IconComponent === 'function') {
+      return <IconComponent className="w-4 h-4 sm:w-5 sm:h-5" />;
+    }
+    return <span>{fallback}</span>;
+  };
+
   // API Key Input Component
   if (showApiKeyInput || !apiKey) {
     return (
       <div className="flex items-center justify-center h-full bg-gradient-to-br from-slate-100 to-white p-4 sm:p-8">
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 sm:p-8 max-w-md w-full mx-4">
           <div className="text-center mb-6">
-            <Crown className="w-12 h-12 sm:w-16 sm:h-16 text-amber-500 mx-auto mb-4" />
+            {renderIcon(Crown, '👑')}
             <h3 className="text-xl sm:text-2xl font-semibold text-slate-800 mb-2 font-playfair">ElevenLabs API Key</h3>
             <p className="text-slate-600 text-sm">Enter your API key to activate the AI concierge</p>
           </div>
@@ -638,7 +659,7 @@ export default function ElevenLabsAgent({
                 onClick={() => setShowApiKey(!showApiKey)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
               >
-                {showApiKey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showApiKey ? renderIcon(EyeOff, '🙈') : renderIcon(Eye, '👁️')}
               </button>
             </div>
             
@@ -647,7 +668,7 @@ export default function ElevenLabsAgent({
               disabled={!tempApiKey.trim()}
               className="w-full bg-gradient-to-r from-amber-600 to-amber-500 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
             >
-              <Key className="w-5 h-5" />
+              {renderIcon(Key, '🔑')}
               <span>Save API Key</span>
             </button>
             
@@ -692,7 +713,7 @@ export default function ElevenLabsAgent({
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               } ${isConnected ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             >
-              <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
+              {renderIcon(Zap, '⚡')}
               <span className="font-medium">Mr Hyde</span>
             </button>
 
@@ -717,7 +738,7 @@ export default function ElevenLabsAgent({
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               } ${isConnected ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             >
-              <Heart className="w-3 h-3 sm:w-4 sm:h-4" />
+              {renderIcon(Heart, '💚')}
               <span className="font-medium">Dr Jekyll</span>
             </button>
           </div>
@@ -727,7 +748,7 @@ export default function ElevenLabsAgent({
             onClick={() => setShowApiKeyInput(true)}
             className="flex items-center space-x-2 px-3 py-2 text-slate-600 hover:text-slate-800 transition-colors text-sm"
           >
-            <Key className="w-4 h-4" />
+            {renderIcon(Key, '🔑')}
             <span>API Key</span>
           </button>
         </div>
@@ -738,8 +759,8 @@ export default function ElevenLabsAgent({
         <div className="absolute inset-0 bg-black bg-opacity-10"></div>
         <div className="relative text-center">
           <div className="flex items-center justify-center mb-2 sm:mb-3">
-            <currentAgent.icon className="w-6 h-6 sm:w-8 sm:h-8 mr-2 sm:mr-3" />
-            <div>
+            {renderIcon(currentAgent.icon, agentMode === 'MR_HYDE' ? '⚡' : '💚')}
+            <div className="ml-2 sm:ml-3">
               <h2 className="text-xl sm:text-2xl font-bold font-playfair">{currentAgent.name}</h2>
               <p className="text-xs sm:text-sm opacity-90">{currentAgent.title}</p>
             </div>
@@ -760,7 +781,7 @@ export default function ElevenLabsAgent({
                   disabled={isConnecting}
                   className={`flex items-center space-x-2 px-4 sm:px-6 py-3 bg-gradient-to-r ${currentAgent.colors.primary} text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-lg mx-auto`}
                 >
-                  <currentAgent.icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                  {renderIcon(currentAgent.icon, agentMode === 'MR_HYDE' ? '⚡' : '💚')}
                   <span>{isConnecting ? 'Connecting...' : `Connect to ${currentAgent.name}`}</span>
                 </button>
                 
@@ -785,7 +806,7 @@ export default function ElevenLabsAgent({
                       : `bg-slate-100 text-slate-600 hover:bg-slate-200`
                   }`}
                 >
-                  {isMuted ? <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" /> : <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />}
+                  {isMuted ? renderIcon(VolumeX, '🔇') : renderIcon(Volume2, '🔊')}
                 </button>
                 
                 <div className="text-center">
@@ -837,8 +858,8 @@ export default function ElevenLabsAgent({
           <div className="p-4 sm:p-6 border-t border-slate-200 bg-slate-50">
             <div className="mb-4">
               <h4 className={`font-semibold ${currentAgent.colors.accent} flex items-center text-base sm:text-lg`}>
-                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                Recommended by {currentAgent.name}
+                {renderIcon(Sparkles, '✨')}
+                <span className="ml-2">Recommended by {currentAgent.name}</span>
               </h4>
             </div>
             <div className="max-w-6xl mx-auto">
