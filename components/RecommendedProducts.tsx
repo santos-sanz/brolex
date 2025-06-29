@@ -113,7 +113,7 @@ const RecommendedProducts: React.FC<RecommendedProductsProps> = ({
                           Key Features
                         </h5>
                         <ul className="text-xs text-slate-600 space-y-1">
-                          {product.displayData.features.slice(0, window.innerWidth < 640 ? 2 : 3).map((feature, index) => (
+                          {product.displayData.features.slice(0, typeof window !== 'undefined' && window.innerWidth < 640 ? 2 : 3).map((feature, index) => (
                             <li key={index} className="flex items-start">
                               <span className="text-amber-500 mr-2">•</span>
                               <span>{feature}</span>
