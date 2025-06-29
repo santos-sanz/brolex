@@ -465,6 +465,7 @@ export default function ElevenLabsAgent({
           },
         });
       }
+      return 'Insurance removed successfully';
     } else {
       // Agent-specific responses for no insurance
       if (agentMode === 'MR_HYDE') {
@@ -484,39 +485,117 @@ export default function ElevenLabsAgent({
           },
         });
       }
+      return 'No insurance found to remove';
     }
   };
 
-  // Define client tools for ElevenLabs SDK
+  const handleShowProductCard = (parameters: { 
+    name: string; 
+    description?: string; 
+    image?: string; 
+    tagline?: string; 
+    product_id: string; 
+    price?: string; 
+  }) => {
+    console.log('🎯 Show product card:', parameters);
+    
+    try {
+      const productId = parseInt(parameters.product_id, 10);
+      
+      // Find product in our data first
+      const existingProduct = productsData.find((p: any) => p.id === productId);
+      
+      if (existingProduct) {
+        // Use existing product data
+        if (onShowProductCard) {
+          onShowProductCard({
+            productId: existingProduct.id,
+            name: existingProduct.name,
+            price: existingProduct.price.toString(),
+            image: existingProduct.image,
+            description: existingProduct.description
+          });
+        } else {
+          handleProductDisplay({
+            productId: existingProduct.id,
+            name: existingProduct.name,
+            price: existingProduct.price.toString(),
+            image: existingProduct.image,
+            description: existingProduct.description
+          });
+        }
+      } else {
+        // Create product from agent parameters
+        const productData = {
+          productId: productId,
+          name: parameters.name,
+          price: parameters.price || '0',
+          image: parameters.image || '/favicon.ico',
+          description: parameters.description || parameters.tagline || ''
+        };
+        
+        if (onShowProductCard) {
+          onShowProductCard(productData);
+        } else {
+          handleProductDisplay(productData);
+        }
+      }
+      
+      return 'Product card displayed successfully';
+    } catch (error) {
+      console.error('Error showing product card:', error);
+      return 'Failed to display product card';
+    }
+  };
+
+  // Define client tools for ElevenLabs SDK with exact parameter matching
   const clientTools = {
     addProductToCart: async (parameters: { product_id: string }) => {
+      console.log('🔧 addProductToCart called with:', parameters);
       handleAddProductToCart(parameters);
       return 'Product added to cart successfully';
     },
     removeProductFromCart: async (parameters: { product_id: string }) => {
+      console.log('🔧 removeProductFromCart called with:', parameters);
       handleRemoveProductFromCart(parameters);
       return 'Product removed from cart successfully';
     },
     updateCartQuantity: async (parameters: { product_id: string; quantity: number }) => {
+      console.log('🔧 updateCartQuantity called with:', parameters);
       handleUpdateCartQuantity(parameters);
       return 'Cart quantity updated successfully';
     },
     showCart: async () => {
+      console.log('🔧 showCart called');
       handleShowCart();
       return 'Cart displayed successfully';
     },
     hideCart: async () => {
+      console.log('🔧 hideCart called');
       handleHideCart();
       return 'Cart hidden successfully';
     },
     offerWatchInsurance: async () => {
+      console.log('🔧 offerWatchInsurance called');
       return handleOfferWatchInsurance();
     },
     removeWatchInsurance: async () => {
-      handleRemoveWatchInsurance();
-      return 'Insurance removed successfully';
+      console.log('🔧 removeWatchInsurance called');
+      return handleRemoveWatchInsurance();
+    },
+    showProductCard: async (parameters: { 
+      name: string; 
+      description?: string; 
+      image?: string; 
+      tagline?: string; 
+      product_id: string; 
+      price?: string; 
+    }) => {
+      console.log('🔧 showProductCard called with:', parameters);
+      return handleShowProductCard(parameters);
     },
     productDisplay: async (parameters: any) => {
+      console.log('🔧 productDisplay called with:', parameters);
       if (onShowProductCard) {
         onShowProductCard(parameters);
       } else {
@@ -524,15 +603,8 @@ export default function ElevenLabsAgent({
       }
       return 'Product displayed successfully';
     },
-    showProductCard: async (parameters: any) => {
-      if (onShowProductCard) {
-        onShowProductCard(parameters);
-      } else {
-        handleProductDisplay(parameters);
-      }
-      return 'Product card displayed successfully';
-    },
     closeProductCard: async (parameters?: { productId?: number | string }) => {
+      console.log('🔧 closeProductCard called with:', parameters);
       if (onCloseProductCard) {
         onCloseProductCard(parameters?.productId);
       } else {
