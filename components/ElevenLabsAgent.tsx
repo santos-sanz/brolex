@@ -158,12 +158,6 @@ export default function ElevenLabsAgent({
   // Handle API key submission
   const handleApiKeySubmit = () => {
     if (tempApiKey.trim()) {
-      // Validate API key format
-      if (!tempApiKey.trim().startsWith('sk-')) {
-        toast.error('API key should start with "sk-"');
-        return;
-      }
-      
       setApiKey(tempApiKey.trim());
       setShowApiKeyInput(false);
       localStorage.setItem('elevenlabs-api-key', tempApiKey.trim());
@@ -641,13 +635,6 @@ export default function ElevenLabsAgent({
       return;
     }
     
-    // Validate API key format
-    if (!apiKey.trim().startsWith('sk-')) {
-      toast.error('Invalid API key format. API key should start with "sk-"');
-      setShowApiKeyInput(true);
-      return;
-    }
-    
     console.log('🔗 Attempting to connect with agent ID:', currentAgentId);
     console.log('🔑 Using API key:', apiKey.substring(0, 10) + '...');
     
@@ -728,7 +715,7 @@ export default function ElevenLabsAgent({
                 type={showApiKey ? "text" : "password"}
                 value={tempApiKey}
                 onChange={(e) => setTempApiKey(e.target.value)}
-                placeholder="sk-..."
+                placeholder="Enter your ElevenLabs API key..."
                 className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors pr-12 text-sm"
                 onKeyPress={(e) => e.key === 'Enter' && handleApiKeySubmit()}
               />
