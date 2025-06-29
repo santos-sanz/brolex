@@ -39,7 +39,7 @@
     "@radix-ui/react-toggle-group": "^1.1.0",
     "@radix-ui/react-tooltip": "^1.1.2",
     "@types/node": "24.0.7",
-    "@types/react": "19.1.8",
+    "@types/react": "^18.2.18",
     "@types/react-dom": "^18.2.18",
     "@types/three": "^0.169.0",
     "autoprefixer": "10.4.15",
