@@ -448,30 +448,18 @@ export default function ElevenLabsAgent({
   };
 
   const handleRemoveWatchInsurance = () => {
-    console.log('🚫 Remove watch insurance - Starting function');
-    console.log('🚫 Current cart items:', state.items);
+    console.log('🚫 Remove watch insurance');
     
-    // Find insurance item with detailed logging
-    const insuranceItem = state.items.find(item => {
-      console.log('🔍 Checking item:', { id: item.id, name: item.name, isInsurance: item.isInsurance });
-      return item.isInsurance === true;
-    });
-    
-    console.log('🚫 Found insurance item:', insuranceItem);
+    // Find and remove insurance item
+    const insuranceItem = state.items.find(item => item.isInsurance);
     
     if (insuranceItem) {
-      console.log('🚫 Removing insurance item with ID:', insuranceItem.id);
-      
-      // Remove the insurance item
       removeItem(insuranceItem.id);
-      
-      console.log('🚫 Insurance removal completed');
       
       // Agent-specific responses
       if (agentMode === 'HYDE') {
         toast.success('INSURANCE OBLITERATED! Your watches are now VULNERABLE! 💀⚡', {
           icon: '💥',
-          duration: 4000,
           style: {
             background: '#dc2626',
             color: '#ffffff',
@@ -480,23 +468,18 @@ export default function ElevenLabsAgent({
       } else {
         toast.success('Protection Plan gracefully removed from your collection 🌸', {
           icon: '🗑️',
-          duration: 3000,
           style: {
             background: '#059669',
             color: '#ffffff',
           },
         });
       }
-      
       return 'Insurance removed successfully';
     } else {
-      console.log('🚫 No insurance item found in cart');
-      
       // Agent-specific responses for no insurance
       if (agentMode === 'HYDE') {
         toast.error('NO INSURANCE TO DESTROY! Your watches remain UNPROTECTED! 😈', {
           icon: '⚠️',
-          duration: 4000,
           style: {
             background: '#dc2626',
             color: '#ffffff',
@@ -505,14 +488,12 @@ export default function ElevenLabsAgent({
       } else {
         toast.info('No protection plan found in your collection 💭', {
           icon: '🔍',
-          duration: 3000,
           style: {
             background: '#059669',
             color: '#ffffff',
           },
         });
       }
-      
       return 'No insurance found to remove';
     }
   };
@@ -629,7 +610,7 @@ export default function ElevenLabsAgent({
       return handleOfferWatchInsurance();
     },
     removeWatchInsurance: async () => {
-      console.log('🔧 removeWatchInsurance called - Tool invoked');
+      console.log('🔧 removeWatchInsurance called');
       return handleRemoveWatchInsurance();
     },
     showProductCard: async (parameters: { 
