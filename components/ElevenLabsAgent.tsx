@@ -83,9 +83,9 @@ export default function ElevenLabsAgent({
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   
-  // API Key management
-  const [apiKey, setApiKey] = useState(initialApiKey || '');
-  const [showApiKeyInput, setShowApiKeyInput] = useState(!initialApiKey);
+  // API Key management - prioritize environment variable
+  const [apiKey, setApiKey] = useState('');
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
   const [tempApiKey, setTempApiKey] = useState('');
   
@@ -121,6 +121,40 @@ export default function ElevenLabsAgent({
     });
   }, []);
 
+  // Load API key from environment variables and localStorage on mount
+  useEffect(() => {
+    // First priority: environment variable
+    const envApiKey = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY;
+    
+    if (envApiKey && envApiKey.trim()) {
+      console.log('✅ Using API key from environment variables');
+      setApiKey(envApiKey.trim());
+      setShowApiKeyInput(false);
+      return;
+    }
+
+    // Second priority: passed prop
+    if (initialApiKey && initialApiKey.trim()) {
+      console.log('✅ Using API key from props');
+      setApiKey(initialApiKey.trim());
+      setShowApiKeyInput(false);
+      return;
+    }
+
+    // Third priority: localStorage
+    const savedApiKey = localStorage.getItem('elevenlabs-api-key');
+    if (savedApiKey && savedApiKey.trim()) {
+      console.log('✅ Using API key from localStorage');
+      setApiKey(savedApiKey.trim());
+      setShowApiKeyInput(false);
+      return;
+    }
+
+    // No API key found
+    console.log('❌ No API key found, showing input');
+    setShowApiKeyInput(true);
+  }, [initialApiKey]);
+
   // Handle API key submission
   const handleApiKeySubmit = () => {
     if (tempApiKey.trim()) {
@@ -141,15 +175,6 @@ export default function ElevenLabsAgent({
       toast.error('Please enter a valid API key');
     }
   };
-
-  // Load API key from localStorage on mount
-  useEffect(() => {
-    const savedApiKey = localStorage.getItem('elevenlabs-api-key');
-    if (savedApiKey && !apiKey) {
-      setApiKey(savedApiKey);
-      setShowApiKeyInput(false);
-    }
-  }, []);
 
   // Handle agent mode switching
   const handleAgentSwitch = (newMode: AgentMode) => {
@@ -683,16 +708,8 @@ export default function ElevenLabsAgent({
     }
   };
 
-  // Safe icon rendering function
-  const renderIcon = (IconComponent: any, fallback: string) => {
-    if (IconComponent && typeof IconComponent === 'function') {
-      return <IconComponent className="w-4 h-4 sm:w-5 sm:h-5" />;
-    }
-    return <span>{fallback}</span>;
-  };
-
   // API Key Input Component
-  if (showApiKeyInput || !apiKey) {
+  if (showApiKeyInput && !apiKey) {
     return (
       <div className="flex items-center justify-center h-full bg-gradient-to-br from-slate-100 to-white p-4 sm:p-8">
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 sm:p-8 max-w-md w-full mx-4">
@@ -700,6 +717,9 @@ export default function ElevenLabsAgent({
             <Crown className="w-12 h-12 sm:w-16 sm:h-16 text-amber-500 mx-auto mb-4" />
             <h3 className="text-xl sm:text-2xl font-semibold text-slate-800 mb-2 font-playfair">ElevenLabs API Key</h3>
             <p className="text-slate-600 text-sm">Enter your API key to activate the AI concierge</p>
+            <p className="text-slate-500 text-xs mt-2">
+              Or add NEXT_PUBLIC_ELEVENLABS_API_KEY to your .env file
+            </p>
           </div>
           
           <div className="space-y-4">
@@ -802,13 +822,23 @@ export default function ElevenLabsAgent({
           </div>
           
           {/* API Key Management */}
-          <button
-            onClick={() => setShowApiKeyInput(true)}
-            className="flex items-center space-x-2 px-3 py-2 text-slate-600 hover:text-slate-800 transition-colors text-sm"
-          >
-            <Key className="w-4 h-4" />
-            <span>API Key</span>
-          </button>
+          <div className="flex items-center space-x-2">
+            {/* API Key Status Indicator */}
+            <div className="flex items-center space-x-1">
+              <div className={`w-2 h-2 rounded-full ${apiKey ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span className="text-xs text-slate-600">
+                {apiKey ? 'API Key Set' : 'No API Key'}
+              </span>
+            </div>
+            
+            <button
+              onClick={() => setShowApiKeyInput(true)}
+              className="flex items-center space-x-2 px-3 py-2 text-slate-600 hover:text-slate-800 transition-colors text-sm"
+            >
+              <Key className="w-4 h-4" />
+              <span>API Key</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -836,7 +866,7 @@ export default function ElevenLabsAgent({
               <div className="text-center space-y-4 w-full">
                 <button
                   onClick={handleConnect}
-                  disabled={isConnecting}
+                  disabled={isConnecting || !apiKey}
                   className={`flex items-center space-x-2 px-4 sm:px-6 py-3 bg-gradient-to-r ${currentAgent.colors.primary} text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-lg mx-auto`}
                 >
                   <currentAgent.icon className="w-4 h-4 sm:w-5 sm:h-5" />
