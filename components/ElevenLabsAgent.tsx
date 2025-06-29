@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import ElevenLabsConversationalAI from '@elevenlabs/react';
+import { useState, useEffect } from 'react';
+import { useConversation } from '@elevenlabs/react';
 import { 
   Mic, 
   MicOff, 
@@ -76,7 +76,6 @@ export default function ElevenLabsAgent({
   currentProduct,
   onRemoveProduct 
 }: ElevenLabsAgentProps) {
-  const [isConnected, setIsConnected] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -89,10 +88,6 @@ export default function ElevenLabsAgent({
   const [showApiKeyInput, setShowApiKeyInput] = useState(!initialApiKey);
   const [showApiKey, setShowApiKey] = useState(false);
   const [tempApiKey, setTempApiKey] = useState('');
-  
-  // ElevenLabs widget ref and state
-  const widgetRef = useRef<any>(null);
-  const [widgetKey, setWidgetKey] = useState(0); // Force re-render key
   
   const { 
     state, 
@@ -133,7 +128,6 @@ export default function ElevenLabsAgent({
       setShowApiKeyInput(false);
       localStorage.setItem('elevenlabs-api-key', tempApiKey.trim());
       setConnectionError(null);
-      setWidgetKey(prev => prev + 1); // Force widget re-render
       toast.success('API Key saved successfully! 🔑', {
         icon: '✅',
       });
@@ -153,7 +147,7 @@ export default function ElevenLabsAgent({
 
   // Handle agent mode switching
   const handleAgentSwitch = (newMode: AgentMode) => {
-    if (isConnected) {
+    if (conversation.status === 'connected') {
       toast.error('Please disconnect before switching agents', {
         icon: '⚠️',
       });
@@ -162,7 +156,6 @@ export default function ElevenLabsAgent({
     
     setAgentMode(newMode);
     setConnectionError(null);
-    setWidgetKey(prev => prev + 1); // Force widget re-render
     const newAgent = AGENTS[newMode];
     
     if (newMode === 'MR_HYDE') {
@@ -469,11 +462,10 @@ export default function ElevenLabsAgent({
     }
   };
 
-  // ElevenLabs conversation configuration
-  const conversationConfig = {
+  // Initialize the useConversation hook
+  const conversation = useConversation({
     onConnect: () => {
       console.log('🔗 Connected to ElevenLabs');
-      setIsConnected(true);
       setIsConnecting(false);
       setConnectionError(null);
       
@@ -498,7 +490,6 @@ export default function ElevenLabsAgent({
     },
     onDisconnect: () => {
       console.log('🔌 Disconnected from ElevenLabs');
-      setIsConnected(false);
       setIsListening(false);
       setIsSpeaking(false);
       setIsConnecting(false);
@@ -525,7 +516,6 @@ export default function ElevenLabsAgent({
     onError: (error: any) => {
       console.error('❌ ElevenLabs error:', error);
       setIsConnecting(false);
-      setIsConnected(false);
       setConnectionError(error?.message || 'Connection failed');
       
       // More specific error handling
@@ -540,13 +530,17 @@ export default function ElevenLabsAgent({
         toast.error(`Connection failed: ${error?.message || 'Unknown error'}`);
       }
     },
-    onModeChange: (mode: any) => {
-      console.log('🎤 Mode changed:', mode);
-      setIsListening(mode?.mode === 'listening');
-      setIsSpeaking(mode?.mode === 'speaking');
-    },
     onMessage: (message: any) => {
       console.log('💬 Message received:', message);
+      
+      // Update listening/speaking states based on message type
+      if (message.type === 'user_transcript') {
+        setIsListening(true);
+        setIsSpeaking(false);
+      } else if (message.type === 'agent_response') {
+        setIsListening(false);
+        setIsSpeaking(true);
+      }
     },
     onToolCall: (toolCall: any) => {
       console.log('🔧 Tool called:', toolCall);
@@ -597,9 +591,9 @@ export default function ElevenLabsAgent({
         toast.error('Tool execution failed');
       }
     }
-  };
+  });
 
-  const handleConnect = () => {
+  const handleConnect = async () => {
     if (!apiKey.trim()) {
       toast.error('Please enter your ElevenLabs API key first');
       setShowApiKeyInput(true);
@@ -611,18 +605,45 @@ export default function ElevenLabsAgent({
     
     setIsConnecting(true);
     setConnectionError(null);
-    setIsConnected(false);
     
-    // Force widget re-render to ensure fresh connection
-    setWidgetKey(prev => prev + 1);
+    try {
+      // Generate signed URL for the agent
+      const response = await fetch(`https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=${currentAgentId}`, {
+        method: 'GET',
+        headers: {
+          'xi-api-key': apiKey,
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to get signed URL: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const signedUrl = data.signed_url;
+      
+      // Start the conversation session
+      await conversation.startSession({ url: signedUrl });
+    } catch (error) {
+      console.error('Connection error:', error);
+      setIsConnecting(false);
+      setConnectionError(error instanceof Error ? error.message : 'Connection failed');
+      
+      if (error instanceof Error && error.message.includes('401')) {
+        toast.error('Invalid API key. Please check your credentials.');
+        setShowApiKeyInput(true);
+      } else {
+        toast.error(`Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
   };
 
-  const handleDisconnect = () => {
-    setIsConnected(false);
-    setIsListening(false);
-    setIsSpeaking(false);
-    setIsConnecting(false);
-    setWidgetKey(prev => prev + 1); // Force widget re-render
+  const handleDisconnect = async () => {
+    try {
+      await conversation.endSession();
+    } catch (error) {
+      console.error('Disconnect error:', error);
+    }
   };
 
   // Safe icon rendering function
@@ -706,12 +727,12 @@ export default function ElevenLabsAgent({
             {/* Mr Hyde Option */}
             <button
               onClick={() => handleAgentSwitch('MR_HYDE')}
-              disabled={isConnected}
+              disabled={conversation.status === 'connected'}
               className={`flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 rounded-full transition-all duration-300 text-sm sm:text-base ${
                 agentMode === 'MR_HYDE'
                   ? 'bg-gradient-to-r from-red-600 to-red-500 text-white shadow-lg'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              } ${isConnected ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              } ${conversation.status === 'connected' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             >
               {renderIcon(Zap, '⚡')}
               <span className="font-medium">Mr Hyde</span>
@@ -731,12 +752,12 @@ export default function ElevenLabsAgent({
             {/* Dr Jekyll Option */}
             <button
               onClick={() => handleAgentSwitch('DR_JEKYLL')}
-              disabled={isConnected}
+              disabled={conversation.status === 'connected'}
               className={`flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 rounded-full transition-all duration-300 text-sm sm:text-base ${
                 agentMode === 'DR_JEKYLL'
                   ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-lg'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              } ${isConnected ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              } ${conversation.status === 'connected' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             >
               {renderIcon(Heart, '💚')}
               <span className="font-medium">Dr Jekyll</span>
@@ -774,7 +795,7 @@ export default function ElevenLabsAgent({
         {/* Connection Status & Controls - Mobile Responsive */}
         <div className="p-4 sm:p-6 bg-white border-b border-slate-200">
           <div className="flex items-center justify-center space-x-4">
-            {!isConnected ? (
+            {conversation.status !== 'connected' ? (
               <div className="text-center space-y-4 w-full">
                 <button
                   onClick={handleConnect}
@@ -844,7 +865,7 @@ export default function ElevenLabsAgent({
                 {currentAgent.name} AI Concierge
               </h3>
               <p className="text-slate-600 text-sm max-w-md px-4">
-                {isConnected 
+                {conversation.status === 'connected'
                   ? `${currentAgent.name} is ready to assist with your luxury watch needs`
                   : `Connect to start your conversation with ${currentAgent.name}`
                 }
@@ -872,19 +893,6 @@ export default function ElevenLabsAgent({
           </div>
         )}
       </div>
-
-      {/* ElevenLabs Widget - Properly initialized with key for re-rendering */}
-      {apiKey && (
-        <div className="absolute inset-0 pointer-events-none">
-          <ElevenLabsConversationalAI
-            key={`${currentAgentId}-${apiKey}-${widgetKey}`} // Force re-initialization on changes
-            agentId={currentAgentId}
-            apiKey={apiKey}
-            ref={widgetRef}
-            {...conversationConfig}
-          />
-        </div>
-      )}
     </div>
   );
 }
