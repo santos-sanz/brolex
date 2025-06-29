@@ -947,18 +947,11 @@ export default function ElevenLabsAgent({
         </div>
       </div>
 
-      {/* Agent Header - Mobile Responsive */}
-      <div className={`bg-gradient-to-r ${currentAgent.colors.primary} p-4 sm:p-6 text-white relative overflow-hidden`}>
-        <div className="absolute inset-0 bg-black bg-opacity-10"></div>
-        <div className="relative text-center">
-          <div className="flex items-center justify-center mb-2 sm:mb-3">
-            <currentAgent.icon className="w-6 h-6 sm:w-8 sm:h-8 mr-2 sm:mr-3" />
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold font-playfair">{currentAgent.name}</h2>
-              <p className="text-xs sm:text-sm opacity-90">{currentAgent.title}</p>
-            </div>
-          </div>
-          <p className="text-xs sm:text-sm opacity-80 px-4">{currentAgent.description}</p>
+      {/* Simplified Agent Header - Much Smaller */}
+      <div className={`bg-gradient-to-r ${currentAgent.colors.primary} p-2 sm:p-3 text-white relative overflow-hidden`}>
+        <div className="relative flex items-center justify-center">
+          <currentAgent.icon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+          <h2 className="text-sm sm:text-base font-semibold font-playfair">{currentAgent.name}</h2>
         </div>
       </div>
 
