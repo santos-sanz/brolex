@@ -487,8 +487,64 @@ export default function ElevenLabsAgent({
     }
   };
 
+  // Define client tools for ElevenLabs SDK
+  const clientTools = {
+    addProductToCart: async (parameters: { product_id: string }) => {
+      handleAddProductToCart(parameters);
+      return 'Product added to cart successfully';
+    },
+    removeProductFromCart: async (parameters: { product_id: string }) => {
+      handleRemoveProductFromCart(parameters);
+      return 'Product removed from cart successfully';
+    },
+    updateCartQuantity: async (parameters: { product_id: string; quantity: number }) => {
+      handleUpdateCartQuantity(parameters);
+      return 'Cart quantity updated successfully';
+    },
+    showCart: async () => {
+      handleShowCart();
+      return 'Cart displayed successfully';
+    },
+    hideCart: async () => {
+      handleHideCart();
+      return 'Cart hidden successfully';
+    },
+    offerWatchInsurance: async () => {
+      return handleOfferWatchInsurance();
+    },
+    removeWatchInsurance: async () => {
+      handleRemoveWatchInsurance();
+      return 'Insurance removed successfully';
+    },
+    productDisplay: async (parameters: any) => {
+      if (onShowProductCard) {
+        onShowProductCard(parameters);
+      } else {
+        handleProductDisplay(parameters);
+      }
+      return 'Product displayed successfully';
+    },
+    showProductCard: async (parameters: any) => {
+      if (onShowProductCard) {
+        onShowProductCard(parameters);
+      } else {
+        handleProductDisplay(parameters);
+      }
+      return 'Product card displayed successfully';
+    },
+    closeProductCard: async (parameters?: { productId?: number | string }) => {
+      if (onCloseProductCard) {
+        onCloseProductCard(parameters?.productId);
+      } else {
+        handleCloseProductCard(parameters?.productId);
+      }
+      return 'Product card closed successfully';
+    }
+  };
+
   // Initialize the useConversation hook
   const conversation = useConversation({
+    clientTools,
     onConnect: () => {
       console.log('🔗 Connected to ElevenLabs');
       setIsConnecting(false);
@@ -575,55 +631,6 @@ export default function ElevenLabsAgent({
       } else if (message.type === 'agent_response') {
         setIsListening(false);
         setIsSpeaking(true);
-      }
-    },
-    onToolCall: (toolCall: any) => {
-      console.log('🔧 Tool called:', toolCall);
-      
-      try {
-        const { name, parameters } = toolCall;
-        
-        switch (name) {
-          case 'addProductToCart':
-            handleAddProductToCart(parameters);
-            break;
-          case 'removeProductFromCart':
-            handleRemoveProductFromCart(parameters);
-            break;
-          case 'updateCartQuantity':
-            handleUpdateCartQuantity(parameters);
-            break;
-          case 'showCart':
-            handleShowCart();
-            break;
-          case 'hideCart':
-            handleHideCart();
-            break;
-          case 'offerWatchInsurance':
-            return handleOfferWatchInsurance();
-          case 'removeWatchInsurance':
-            handleRemoveWatchInsurance();
-            break;
-          case 'productDisplay':
-            if (onShowProductCard) {
-              onShowProductCard(parameters);
-            } else {
-              handleProductDisplay(parameters);
-            }
-            break;
-          case 'closeProductCard':
-            if (onCloseProductCard) {
-              onCloseProductCard(parameters?.productId);
-            } else {
-              handleCloseProductCard(parameters?.productId);
-            }
-            break;
-          default:
-            console.warn('Unknown tool:', name);
-        }
-      } catch (error) {
-        console.error('Error handling tool call:', error);
-        toast.error('Tool execution failed');
       }
     }
   });
