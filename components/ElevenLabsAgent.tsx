@@ -410,7 +410,7 @@ export default function ElevenLabsAgent({
           },
         });
       } else {
-        toast.info('Premium Protection Plan already active for your collection 🛡️✨', {
+        toast('Premium Protection Plan already active for your collection 🛡️✨', {
           icon: '💚',
           style: {
             background: '#059669',
@@ -486,7 +486,7 @@ export default function ElevenLabsAgent({
           },
         });
       } else {
-        toast.info('No protection plan found in your collection 💭', {
+        toast('No protection plan found in your collection 💭', {
           icon: '🔍',
           style: {
             background: '#059669',
@@ -687,7 +687,7 @@ export default function ElevenLabsAgent({
           },
         });
       } else {
-        toast.info('🌙 Jekyll has retired for the evening. Thank you!', {
+        toast('🌙 Jekyll has retired for the evening. Thank you!', {
           icon: '💤',
           style: {
             background: '#059669',
@@ -787,7 +787,7 @@ export default function ElevenLabsAgent({
         console.log('✅ Got signed URL, starting session...');
         
         // Start the conversation session
-        await conversation.startSession({ url: signedUrl });
+        await conversation.startSession({ agentId, origin: signedUrl });
         
       } catch (signedUrlError) {
         console.error('Signed URL connection error:', signedUrlError);
