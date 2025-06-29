@@ -99,7 +99,7 @@ export default function WatchCard({ watch }: WatchCardProps) {
             <ul className="space-y-1">
               {watch.features.slice(0, 3).map((feature, index) => (
                 <li key={index} className="text-sm text-gray-600 flex items-start">
-                  <span className="text-blue-500 mr-2 mt-1">•</span>
+                  <span className="text-amber-500 mr-2 mt-1">•</span>
                   <span>{feature}</span>
                 </li>
               ))}
@@ -114,10 +114,10 @@ export default function WatchCard({ watch }: WatchCardProps) {
           </span>
         </div>
 
-        {/* Action Button */}
+        {/* Action Button - Now using primary amber/gold color */}
         <button
           onClick={handleAddToCart}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
+          className="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
         >
           <ShoppingCart className="w-5 h-5" />
           <span>Add to Bag</span>
