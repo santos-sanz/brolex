@@ -124,6 +124,12 @@ export default function ElevenLabsAgent({
   // Handle API key submission
   const handleApiKeySubmit = () => {
     if (tempApiKey.trim()) {
+      // Validate API key format
+      if (!tempApiKey.trim().startsWith('sk-')) {
+        toast.error('API key should start with "sk-"');
+        return;
+      }
+      
       setApiKey(tempApiKey.trim());
       setShowApiKeyInput(false);
       localStorage.setItem('elevenlabs-api-key', tempApiKey.trim());
@@ -516,19 +522,29 @@ export default function ElevenLabsAgent({
     onError: (error: any) => {
       console.error('❌ ElevenLabs error:', error);
       setIsConnecting(false);
-      setConnectionError(error?.message || 'Connection failed');
+      
+      let errorMessage = 'Connection failed';
       
       // More specific error handling
-      if (error?.message?.includes('API key') || error?.message?.includes('401') || error?.message?.includes('Unauthorized')) {
-        toast.error('Invalid API key. Please check your credentials.');
+      if (error?.message?.includes('401') || error?.message?.includes('Unauthorized') || error?.message?.includes('API key')) {
+        errorMessage = 'Invalid API key';
         setShowApiKeyInput(true);
-      } else if (error?.message?.includes('agent') || error?.message?.includes('404')) {
+        toast.error('Invalid API key. Please check your credentials.');
+      } else if (error?.message?.includes('404') || error?.message?.includes('agent')) {
+        errorMessage = 'Agent not found';
         toast.error('Agent not found. Please check the agent ID.');
       } else if (error?.message?.includes('network') || error?.message?.includes('fetch')) {
+        errorMessage = 'Network error';
         toast.error('Network error. Please check your connection.');
+      } else if (error?.message?.includes('CORS')) {
+        errorMessage = 'CORS error - API access blocked';
+        toast.error('API access blocked. Please check your domain settings.');
       } else {
-        toast.error(`Connection failed: ${error?.message || 'Unknown error'}`);
+        errorMessage = error?.message || 'Unknown error';
+        toast.error(`Connection failed: ${errorMessage}`);
       }
+      
+      setConnectionError(errorMessage);
     },
     onMessage: (message: any) => {
       console.log('💬 Message received:', message);
@@ -600,6 +616,13 @@ export default function ElevenLabsAgent({
       return;
     }
     
+    // Validate API key format
+    if (!apiKey.trim().startsWith('sk-')) {
+      toast.error('Invalid API key format. API key should start with "sk-"');
+      setShowApiKeyInput(true);
+      return;
+    }
+    
     console.log('🔗 Attempting to connect with agent ID:', currentAgentId);
     console.log('🔑 Using API key:', apiKey.substring(0, 10) + '...');
     
@@ -607,33 +630,47 @@ export default function ElevenLabsAgent({
     setConnectionError(null);
     
     try {
-      // Generate signed URL for the agent
-      const response = await fetch(`https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=${currentAgentId}`, {
-        method: 'GET',
-        headers: {
-          'xi-api-key': apiKey,
-        },
-      });
+      // For public agents, try direct connection first
+      console.log('🎯 Attempting direct connection to public agent...');
+      await conversation.startSession({ agentId: currentAgentId });
       
-      if (!response.ok) {
-        throw new Error(`Failed to get signed URL: ${response.status}`);
-      }
+    } catch (directError) {
+      console.log('❌ Direct connection failed, trying signed URL approach...');
       
-      const data = await response.json();
-      const signedUrl = data.signed_url;
-      
-      // Start the conversation session
-      await conversation.startSession({ url: signedUrl });
-    } catch (error) {
-      console.error('Connection error:', error);
-      setIsConnecting(false);
-      setConnectionError(error instanceof Error ? error.message : 'Connection failed');
-      
-      if (error instanceof Error && error.message.includes('401')) {
-        toast.error('Invalid API key. Please check your credentials.');
-        setShowApiKeyInput(true);
-      } else {
-        toast.error(`Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      try {
+        // Generate signed URL for the agent
+        const response = await fetch(`https://api.elevenlabs.io/v1/convai/conversation/get-signed-url?agent_id=${currentAgentId}`, {
+          method: 'GET',
+          headers: {
+            'xi-api-key': apiKey,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Signed URL response:', response.status, errorText);
+          
+          if (response.status === 401) {
+            throw new Error('Invalid API key');
+          } else if (response.status === 404) {
+            throw new Error('Agent not found');
+          } else {
+            throw new Error(`API request failed: ${response.status}`);
+          }
+        }
+        
+        const data = await response.json();
+        const signedUrl = data.signed_url;
+        
+        console.log('✅ Got signed URL, starting session...');
+        
+        // Start the conversation session
+        await conversation.startSession({ url: signedUrl });
+        
+      } catch (signedUrlError) {
+        console.error('Signed URL connection error:', signedUrlError);
+        throw signedUrlError;
       }
     }
   };
@@ -660,7 +697,7 @@ export default function ElevenLabsAgent({
       <div className="flex items-center justify-center h-full bg-gradient-to-br from-slate-100 to-white p-4 sm:p-8">
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 sm:p-8 max-w-md w-full mx-4">
           <div className="text-center mb-6">
-            {renderIcon(Crown, '👑')}
+            <Crown className="w-12 h-12 sm:w-16 sm:h-16 text-amber-500 mx-auto mb-4" />
             <h3 className="text-xl sm:text-2xl font-semibold text-slate-800 mb-2 font-playfair">ElevenLabs API Key</h3>
             <p className="text-slate-600 text-sm">Enter your API key to activate the AI concierge</p>
           </div>
@@ -680,7 +717,7 @@ export default function ElevenLabsAgent({
                 onClick={() => setShowApiKey(!showApiKey)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
               >
-                {showApiKey ? renderIcon(EyeOff, '🙈') : renderIcon(Eye, '👁️')}
+                {showApiKey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
             
@@ -689,7 +726,7 @@ export default function ElevenLabsAgent({
               disabled={!tempApiKey.trim()}
               className="w-full bg-gradient-to-r from-amber-600 to-amber-500 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
             >
-              {renderIcon(Key, '🔑')}
+              <Key className="w-5 h-5" />
               <span>Save API Key</span>
             </button>
             
@@ -734,7 +771,7 @@ export default function ElevenLabsAgent({
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               } ${conversation.status === 'connected' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             >
-              {renderIcon(Zap, '⚡')}
+              <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="font-medium">Mr Hyde</span>
             </button>
 
@@ -759,7 +796,7 @@ export default function ElevenLabsAgent({
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               } ${conversation.status === 'connected' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             >
-              {renderIcon(Heart, '💚')}
+              <Heart className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="font-medium">Dr Jekyll</span>
             </button>
           </div>
@@ -769,7 +806,7 @@ export default function ElevenLabsAgent({
             onClick={() => setShowApiKeyInput(true)}
             className="flex items-center space-x-2 px-3 py-2 text-slate-600 hover:text-slate-800 transition-colors text-sm"
           >
-            {renderIcon(Key, '🔑')}
+            <Key className="w-4 h-4" />
             <span>API Key</span>
           </button>
         </div>
@@ -780,8 +817,8 @@ export default function ElevenLabsAgent({
         <div className="absolute inset-0 bg-black bg-opacity-10"></div>
         <div className="relative text-center">
           <div className="flex items-center justify-center mb-2 sm:mb-3">
-            {renderIcon(currentAgent.icon, agentMode === 'MR_HYDE' ? '⚡' : '💚')}
-            <div className="ml-2 sm:ml-3">
+            <currentAgent.icon className="w-6 h-6 sm:w-8 sm:h-8 mr-2 sm:mr-3" />
+            <div>
               <h2 className="text-xl sm:text-2xl font-bold font-playfair">{currentAgent.name}</h2>
               <p className="text-xs sm:text-sm opacity-90">{currentAgent.title}</p>
             </div>
@@ -802,7 +839,7 @@ export default function ElevenLabsAgent({
                   disabled={isConnecting}
                   className={`flex items-center space-x-2 px-4 sm:px-6 py-3 bg-gradient-to-r ${currentAgent.colors.primary} text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-lg mx-auto`}
                 >
-                  {renderIcon(currentAgent.icon, agentMode === 'MR_HYDE' ? '⚡' : '💚')}
+                  <currentAgent.icon className="w-4 h-4 sm:w-5 sm:h-5" />
                   <span>{isConnecting ? 'Connecting...' : `Connect to ${currentAgent.name}`}</span>
                 </button>
                 
@@ -827,7 +864,7 @@ export default function ElevenLabsAgent({
                       : `bg-slate-100 text-slate-600 hover:bg-slate-200`
                   }`}
                 >
-                  {isMuted ? renderIcon(VolumeX, '🔇') : renderIcon(Volume2, '🔊')}
+                  {isMuted ? <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" /> : <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />}
                 </button>
                 
                 <div className="text-center">
@@ -879,8 +916,8 @@ export default function ElevenLabsAgent({
           <div className="p-4 sm:p-6 border-t border-slate-200 bg-slate-50">
             <div className="mb-4">
               <h4 className={`font-semibold ${currentAgent.colors.accent} flex items-center text-base sm:text-lg`}>
-                {renderIcon(Sparkles, '✨')}
-                <span className="ml-2">Recommended by {currentAgent.name}</span>
+                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                Recommended by {currentAgent.name}
               </h4>
             </div>
             <div className="max-w-6xl mx-auto">
