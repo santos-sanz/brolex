@@ -20,7 +20,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useCart } from '../contexts/CartContext';
 import { useProductDisplayTool, RecommendedProduct } from '../utils/productDisplayTool';
-import RecommendedProducts from './RecommendedProducts';
 import ThreeJSAnimation from './ThreeJSAnimation';
 
 // Agent configuration with proper icon handling
@@ -1008,25 +1007,6 @@ export default function ElevenLabsAgent({
             </div>
           </div>
         </div>
-
-        {/* Product Recommendations - Mobile Responsive */}
-        {recommendedProducts.length > 0 && (
-          <div className="p-4 sm:p-6 border-t border-slate-200 bg-slate-50">
-            <div className="mb-4">
-              <h4 className={`font-semibold ${currentAgent.colors.accent} flex items-center text-base sm:text-lg`}>
-                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                Recommended by {currentAgent.name}
-              </h4>
-            </div>
-            <div className="max-w-6xl mx-auto">
-              <RecommendedProducts 
-                products={recommendedProducts}
-                onRemove={removeProduct}
-                onClearAll={clearProducts}
-              />
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
