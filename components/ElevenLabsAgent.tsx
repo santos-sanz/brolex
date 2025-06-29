@@ -21,6 +21,7 @@ import toast from 'react-hot-toast';
 import { useCart } from '../contexts/CartContext';
 import { useProductDisplayTool, RecommendedProduct } from '../utils/productDisplayTool';
 import ThreeJSAnimation from './ThreeJSAnimation';
+import RecommendedProducts from './RecommendedProducts';
 
 // Agent configuration with proper icon handling
 const AGENTS = {
@@ -65,6 +66,8 @@ interface ElevenLabsAgentProps {
   onCloseProductCard?: (productId?: number | string) => void;
   currentProduct?: RecommendedProduct | null;
   onRemoveProduct?: (productId: number) => void;
+  recommendedProducts?: RecommendedProduct[];
+  onClearProducts?: () => void;
 }
 
 export default function ElevenLabsAgent({ 
@@ -73,7 +76,9 @@ export default function ElevenLabsAgent({
   onShowProductCard, 
   onCloseProductCard,
   currentProduct,
-  onRemoveProduct 
+  onRemoveProduct,
+  recommendedProducts = [],
+  onClearProducts
 }: ElevenLabsAgentProps) {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -99,12 +104,17 @@ export default function ElevenLabsAgent({
   } = useCart();
   
   const { 
-    recommendedProducts, 
+    recommendedProducts: localRecommendedProducts, 
     handleProductDisplay, 
     handleCloseProductCard, 
     removeProduct, 
     clearProducts 
   } = useProductDisplayTool();
+
+  // Use props if provided, otherwise use local state
+  const displayedProducts = recommendedProducts.length > 0 ? recommendedProducts : localRecommendedProducts;
+  const handleRemoveProduct = onRemoveProduct || removeProduct;
+  const handleClearProducts = onClearProducts || clearProducts;
 
   // Get current agent configuration
   const currentAgent = AGENTS[agentMode];
@@ -507,13 +517,23 @@ export default function ElevenLabsAgent({
       if (existingProduct) {
         console.log('✅ Found existing product:', existingProduct.name);
         // Use existing product data and display it
-        handleProductDisplay({
-          productId: existingProduct.id,
-          name: existingProduct.name,
-          price: existingProduct.price.toString(),
-          image: existingProduct.image,
-          description: existingProduct.description
-        });
+        if (onShowProductCard) {
+          onShowProductCard({
+            productId: existingProduct.id,
+            name: existingProduct.name,
+            price: existingProduct.price.toString(),
+            image: existingProduct.image,
+            description: existingProduct.description
+          });
+        } else {
+          handleProductDisplay({
+            productId: existingProduct.id,
+            name: existingProduct.name,
+            price: existingProduct.price.toString(),
+            image: existingProduct.image,
+            description: existingProduct.description
+          });
+        }
       } else {
         console.log('⚠️ Product not found in data, creating from parameters');
         // Create product from agent parameters
@@ -525,7 +545,11 @@ export default function ElevenLabsAgent({
           description: parameters.description || parameters.tagline || ''
         };
         
-        handleProductDisplay(productData);
+        if (onShowProductCard) {
+          onShowProductCard(productData);
+        } else {
+          handleProductDisplay(productData);
+        }
       }
       
       // Show success toast
@@ -938,75 +962,108 @@ export default function ElevenLabsAgent({
         </div>
       </div>
 
-      {/* Main Agent Interface */}
-      <div className="flex-1 flex flex-col">
-        {/* Visualization - Centered and Mobile Responsive with Click to Connect */}
-        <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
-          <div className="text-center">
-            <div className="mb-4 sm:mb-6 flex justify-center">
-              <div 
-                onClick={handleCircleClick}
-                className="cursor-pointer transform hover:scale-105 transition-all duration-300"
-              >
-                <ThreeJSAnimation 
-                  isListening={isListening}
-                  isSpeaking={isSpeaking}
-                  isConnecting={isConnecting}
-                  size={typeof window !== 'undefined' && window.innerWidth < 640 ? 150 : 200}
-                  mode={agentMode}
-                />
+      {/* Main Agent Interface with Side-by-Side Layout */}
+      <div className="flex-1 flex flex-col lg:flex-row">
+        {/* Agent Conversation Area */}
+        <div className="flex-1 flex flex-col">
+          {/* Visualization - Centered and Mobile Responsive with Click to Connect */}
+          <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
+            <div className="text-center">
+              <div className="mb-4 sm:mb-6 flex justify-center">
+                <div 
+                  onClick={handleCircleClick}
+                  className="cursor-pointer transform hover:scale-105 transition-all duration-300"
+                >
+                  <ThreeJSAnimation 
+                    isListening={isListening}
+                    isSpeaking={isSpeaking}
+                    isConnecting={isConnecting}
+                    size={typeof window !== 'undefined' && window.innerWidth < 640 ? 150 : 200}
+                    mode={agentMode}
+                  />
+                </div>
               </div>
-            </div>
-            
-            <div className="space-y-2">
-              <h3 className={`text-lg sm:text-xl font-semibold ${currentAgent.colors.accent} font-playfair`}>
-                {currentAgent.name} AI Concierge
-              </h3>
-              <p className="text-slate-600 text-sm max-w-md px-4">
-                {conversation.status === 'connected'
-                  ? `${currentAgent.name} is ready to assist with your luxury watch needs`
-                  : isConnecting
-                  ? 'Connecting...'
-                  : `Click the circle to start your conversation with ${currentAgent.name}`
-                }
-              </p>
               
-              {/* Connection Status */}
-              {conversation.status === 'connected' && (
-                <div className="flex items-center justify-center space-x-4 mt-4">
-                  <button
-                    onClick={() => setIsMuted(!isMuted)}
-                    className={`p-2 sm:p-3 rounded-full transition-colors duration-200 ${
-                      isMuted 
-                        ? 'bg-red-100 text-red-600 hover:bg-red-200' 
-                        : `bg-slate-100 text-slate-600 hover:bg-slate-200`
-                    }`}
-                  >
-                    {isMuted ? <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" /> : <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />}
-                  </button>
-                  
-                  <div className="text-center">
-                    <div className={`text-sm font-medium ${currentAgent.colors.accent}`}>
-                      {isListening ? 'Listening...' : isSpeaking ? 'Speaking...' : 'Connected'}
+              <div className="space-y-2">
+                <h3 className={`text-lg sm:text-xl font-semibold ${currentAgent.colors.accent} font-playfair`}>
+                  {currentAgent.name} AI Concierge
+                </h3>
+                <p className="text-slate-600 text-sm max-w-md px-4">
+                  {conversation.status === 'connected'
+                    ? `${currentAgent.name} is ready to assist with your luxury watch needs`
+                    : isConnecting
+                    ? 'Connecting...'
+                    : `Click the circle to start your conversation with ${currentAgent.name}`
+                  }
+                </p>
+                
+                {/* Connection Status */}
+                {conversation.status === 'connected' && (
+                  <div className="flex items-center justify-center space-x-4 mt-4">
+                    <button
+                      onClick={() => setIsMuted(!isMuted)}
+                      className={`p-2 sm:p-3 rounded-full transition-colors duration-200 ${
+                        isMuted 
+                          ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+                          : `bg-slate-100 text-slate-600 hover:bg-slate-200`
+                      }`}
+                    >
+                      {isMuted ? <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" /> : <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />}
+                    </button>
+                    
+                    <div className="text-center">
+                      <div className={`text-sm font-medium ${currentAgent.colors.accent}`}>
+                        {isListening ? 'Listening...' : isSpeaking ? 'Speaking...' : 'Connected'}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-              
-              {/* Connection Error */}
-              {connectionError && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-4 max-w-md mx-auto">
-                  <p className="text-red-600 text-sm">
-                    <strong>Connection Error:</strong> {connectionError}
-                  </p>
-                  <p className="text-red-500 text-xs mt-1">
-                    Please check your API key and try again.
-                  </p>
-                </div>
-              )}
+                )}
+                
+                {/* Connection Error */}
+                {connectionError && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-4 max-w-md mx-auto">
+                    <p className="text-red-600 text-sm">
+                      <strong>Connection Error:</strong> {connectionError}
+                    </p>
+                    <p className="text-red-500 text-xs mt-1">
+                      Please check your API key and try again.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Product Recommendations Sidebar - Inside Agent Area */}
+        {displayedProducts.length > 0 && (
+          <div className="w-full lg:w-80 xl:w-96 border-t lg:border-t-0 lg:border-l border-slate-200 bg-slate-50">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-amber-500 to-amber-600 py-3 px-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Sparkles className="w-4 h-4 text-white mr-2" />
+                  <h3 className="text-white font-bold text-sm font-playfair">AI Recommendations</h3>
+                </div>
+                <button 
+                  onClick={handleClearProducts}
+                  className="text-amber-100 hover:text-white transition-colors text-xs font-medium"
+                >
+                  Clear All
+                </button>
+              </div>
+            </div>
+
+            {/* Product Cards Container */}
+            <div className="max-h-[500px] lg:max-h-[600px] overflow-y-auto p-4">
+              <RecommendedProducts 
+                products={displayedProducts}
+                onRemove={handleRemoveProduct}
+                onClearAll={handleClearProducts}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
