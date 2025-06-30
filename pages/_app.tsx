@@ -3,6 +3,7 @@ import type { AppProps } from 'next/app';
 import dynamic from 'next/dynamic';
 import { CartProvider } from '../contexts/CartContext';
 import CartSidebar from '../components/CartSidebar';
+import { BoltNewBadge } from '../components/ui/bolt-new-badge';
 
 const Toaster = dynamic(
   () => import('react-hot-toast').then((mod) => mod.Toaster),
@@ -14,6 +15,11 @@ export default function App({ Component, pageProps }: AppProps) {
     <CartProvider>
       <Component {...pageProps} />
       <CartSidebar />
+      <BoltNewBadge 
+        position="bottom-right" 
+        variant="auto" 
+        size="medium"
+      />
       <Toaster 
         position="top-center"
         toastOptions={{
